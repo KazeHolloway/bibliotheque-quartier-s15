@@ -1,6 +1,5 @@
 -- Bibliothèque de quartier : Schéma de Base de Données
--- Projet S14-S15
--- =========================================================
+-- Akieni Academy | Projet S14-S15 
 -- Exécution : psql -U <user> -d <db> -f schema.sql
 
 DROP TABLE IF EXISTS emprunts CASCADE;
@@ -23,7 +22,7 @@ CREATE TABLE adherents (
 );
 
 -- Table livres
--- Relation N,1 avec auteurs (un livre a un seul auteur, un auteur peut avoir plusieurs livres)
+-- Relation N,1 avec auteurs (RG : un livre a un seul auteur, un auteur peut avoir plusieurs livres)
 CREATE TABLE livres (
     id                  SERIAL PRIMARY KEY,
     titre               VARCHAR(255) NOT NULL,
@@ -32,16 +31,14 @@ CREATE TABLE livres (
     disponible          BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- Index utiles pour la recherche par titre / auteur
+-- Index utiles pour accélérer la recherche par titre / auteur
 CREATE INDEX idx_livres_titre ON livres (titre);
 CREATE INDEX idx_livres_auteur_id ON livres (auteur_id);
 
--- =========================================================
 -- Table : emprunts
--- Relation N,1 avec adherents et N,1 avec livres
+-- Relation N,1 avec adherents ET N,1 avec livres
 -- date_retour_effective NULL => emprunt en cours
 -- date_retour_effective renseignée => emprunt terminé
--- =========================================================
 CREATE TABLE emprunts (
     id                      SERIAL PRIMARY KEY,
     adherent_id             INTEGER NOT NULL REFERENCES adherents(id) ON DELETE RESTRICT,
@@ -55,17 +52,9 @@ CREATE INDEX idx_emprunts_adherent_id ON emprunts (adherent_id);
 CREATE INDEX idx_emprunts_livre_id ON emprunts (livre_id);
 CREATE INDEX idx_emprunts_en_cours ON emprunts (date_retour_effective);
 
--- =========================================================
--- Notes de modélisation (à reprendre dans le README) :
--- - "disponible" sur livres est dénormalisé volontairement :
---   il évite de recalculer l'état à chaque lecture de liste,
---   et il est maintenu par la logique métier du backend
---   (transaction lors de la création/retour d'un emprunt).
--- - Un emprunt "en retard" = date_retour_effective IS NULL
---   ET date_retour_prevue < CURRENT_DATE (calculé à la volée,
---   pas stocké, pour éviter toute désynchronisation).
--- - ON DELETE RESTRICT partout : on refuse de supprimer un
---   auteur/adhérent/livre référencé ailleurs, pour préserver
---   l'historique. Le backend renvoie un message clair (409)
---   dans ce cas plutôt que de laisser l'erreur SQL brute.
--- =========================================================
+-- Notes de modélisation :
+-- 1. Un emprunt "en retard" = date_retour_effective IS NULL ET date_retour_prevue < CURRENT_DATE
+
+-- 2. ON DELETE RESTRICT partout sur les FK : on refuse de supprimer un auteur/adhérent/livre
+--    référencé ailleurs, pour préserver l'historique. Le backend renvoie un message
+--    clair (409) dans ce cas plutôt que de laisser l'erreur SQL brute.

@@ -5,19 +5,19 @@ Application de gestion d'une bibliothèque de quartier : gestion des auteurs, de
 
 ## Stack technique
 - Node.js / Express (API REST)
-- PostgreSQL (via `pg`), requêtes SQL paramétrées et transactions
-- Architecture backend : `routes` → `controllers`, middlewares séparés (logger, validation, gestion d'erreurs centralisée)
+- PostgreSQL (via `pg`) - V17.11-3, requêtes SQL paramétrées et transactions
+- Architecture backend : `routes` → `controllers`, middlewares séparés (logger, validation gestion d'erreurs centralisée)
 - HTML5 / CSS3 / JavaScript (Fetch API, async/await) pour le frontend *(en S15)*
 
 ## Structure du projet
 ```bash
 bibliotheque-quartier-s15/
-├── schema.sql              # script de création des tables
+├── schema.sql              # script de création des tables de la BD bibliotheque
 ├── ERD.md                  # diagramme entité-relation (Mermaid)
 ├── .env.example
 ├── src/
 │   ├── config/
-│   │   └── db.js            # connexion PostgreSQL (pool)
+│   │   └── db.js           # connexion PostgreSQL
 │   ├── middlewares/
 │   │   ├── logger.js
 │   │   ├── validate.js
@@ -39,7 +39,7 @@ bibliotheque-quartier-s15/
 │   │   └── asyncHandler.js
 │   ├── app.js
 │   └── server.js
-├── public/                  # frontend HTML/CSS/JS (S15, à venir)
+├── public/                 # frontend HTML/CSS/JS (à venir en S15)
 └── README.md
 ```
 
