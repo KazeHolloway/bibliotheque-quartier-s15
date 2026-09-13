@@ -30,12 +30,23 @@ const api = {
   delete: (path) => apiRequest(path, { method: 'DELETE' }),
 };
 
-// affiche un message d'erreur ou de succes dans le conteneur donne
+// affiche un message d'erreur ou de succes, avec une croix de fermeture et une disparition automatique apres 10 secondes
 function showMessage(container, text, type = 'error') {
-  container.innerHTML = `<div class="message message-${type}">${text}</div>`;
+  container.innerHTML = `
+    <div class="message message-${type}">
+      <span>${text}</span>
+      <button type="button" class="message-close" aria-label="Fermer le message">&times;</button>
+    </div>
+  `;
+
+  container.querySelector('.message-close').addEventListener('click', () => clearMessage(container));
+
+  clearTimeout(container.minuteurMessage);
+  container.minuteurMessage = setTimeout(() => clearMessage(container), 10000);
 }
 
-// vide le conteneur de message
+// vide le conteneur de message et annule la disparition automatique en attente
 function clearMessage(container) {
+  clearTimeout(container.minuteurMessage);
   container.innerHTML = '';
 }
