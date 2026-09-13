@@ -112,10 +112,27 @@ function initScrollTop() {
   });
 }
 
+// empêche le rechargement de la page si on clique sur le logo alors qu'on est déjà sur le dashboard
+function initBrandLink() {
+  const lien = document.querySelector('.brand');
+  if (!lien) return;
+
+  lien.addEventListener('click', (e) => {
+    const cheminActuel = window.location.pathname;
+    const cheminCible = new URL(lien.href).pathname;
+    const estDejaSurIndex = (cheminActuel === '/' || cheminActuel === '/index.html') && cheminCible === '/index.html';
+
+    if (cheminActuel === cheminCible || estDejaSurIndex) {
+      e.preventDefault();
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   construirePanneauPalettes();
   initModeToggle();
   initPaletteToggle();
   initHamburger();
   initScrollTop();
+  initBrandLink();
 });
