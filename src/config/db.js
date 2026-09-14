@@ -1,5 +1,8 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 require('dotenv').config();
+
+// empêche pg de convertir les colonnes DATE en objet Date JS, source du décalage de fuseau horaire observé en JSON
+types.setTypeParser(1082, (value) => value); // Le code 1082 est l'id interne PostgreSQL (OID) du type DATE, c'est une constante
 
 const pool = new Pool({
   host: process.env.DB_HOST,
