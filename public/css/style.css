@@ -468,6 +468,7 @@ body.sidebar-collapsed .main { margin-left: 0; }
 
 .stat-card .stat-label { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.4rem; }
 .stat-card .stat-value { font-family: var(--font-heading); font-size: 1.9rem; font-weight: 600; }
+.stat-card .stat-value.stat-value-small { font-size: 1.2rem; }
 .stat-card.stat-alert { border-left-color: var(--color-danger); }
 .stat-card .stat-detail { margin-top: 0.3rem; font-size: 0.85rem; color: var(--color-text-muted); }
 

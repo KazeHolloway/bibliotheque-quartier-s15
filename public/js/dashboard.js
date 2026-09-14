@@ -31,14 +31,14 @@ async function chargerStats() {
       </div>
       <div class="stat-card">
         <div class="stat-label">Livre le plus emprunté</div>
-        <div class="stat-value" style="font-size:1.2rem;">
+        <div class="stat-value stat-value-small">
           ${livreTop ? livreTop.titre : 'Aucun emprunt pour le moment'}
         </div>
         ${livreTop ? `<div class="stat-detail">${livreTop.nombre_emprunts} emprunt(s)</div>` : ''}
       </div>
       <div class="stat-card">
         <div class="stat-label">Adhérent le plus actif</div>
-        <div class="stat-value" style="font-size:1.2rem;">
+        <div class="stat-value stat-value-small">
           ${adherentTop ? adherentTop.nom : 'Aucun emprunt pour le moment'}
         </div>
         ${adherentTop ? `<div class="stat-detail">${adherentTop.nombre_emprunts} emprunt(s)</div>` : ''}
