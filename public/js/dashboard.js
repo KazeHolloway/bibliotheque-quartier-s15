@@ -14,6 +14,10 @@ async function chargerStats() {
         <div class="stat-value">${stats.total_livres}</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Auteurs enregistrés</div>
+        <div class="stat-value">${stats.total_auteurs}</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Adhérents inscrits</div>
         <div class="stat-value">${stats.total_adherents}</div>
       </div>
