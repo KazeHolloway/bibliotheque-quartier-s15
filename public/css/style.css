@@ -27,7 +27,7 @@
   --color-text-muted: #b98f8c;
   --color-accent: #c94f5c;
   --color-accent-strong: #e2727e;
-  --color-accent-strong-rgb: 226, 114, 126;
+  --color-accent-rgb: 201, 79, 92;
   --color-text-muted-rgb: 185, 143, 140;
 }
 [data-palette="ruby"][data-mode="light"] {
@@ -39,7 +39,7 @@
   --color-text-muted: #8a6360;
   --color-accent: #b5423f;
   --color-accent-strong: #93312f;
-  --color-accent-strong-rgb: 147, 49, 47;
+  --color-accent-rgb: 181, 66, 63;
   --color-text-muted-rgb: 138, 99, 96;
 }
 
@@ -53,7 +53,7 @@
   --color-text-muted: #8ea1c2;
   --color-accent: #3f7fd1;
   --color-accent-strong: #6aa3e8;
-  --color-accent-strong-rgb: 106, 163, 232;
+  --color-accent-rgb: 63, 127, 209;
   --color-text-muted-rgb: 142, 161, 194;
 }
 [data-palette="sapphire"][data-mode="light"] {
@@ -65,7 +65,7 @@
   --color-text-muted: #62789b;
   --color-accent: #2f66b0;
   --color-accent-strong: #23508e;
-  --color-accent-strong-rgb: 35, 80, 142;
+  --color-accent-rgb: 47, 102, 176;
   --color-text-muted-rgb: 98, 120, 155;
 }
 
@@ -79,7 +79,7 @@
   --color-text-muted: #8fb9a0;
   --color-accent: #3f9d6c;
   --color-accent-strong: #63c78f;
-  --color-accent-strong-rgb: 99, 199, 143;
+  --color-accent-rgb: 63, 157, 108;
   --color-text-muted-rgb: 143, 185, 160;
 }
 [data-palette="emerald"][data-mode="light"] {
@@ -91,7 +91,7 @@
   --color-text-muted: #5f8a70;
   --color-accent: #2f8a5c;
   --color-accent-strong: #226b46;
-  --color-accent-strong-rgb: 34, 107, 70;
+  --color-accent-rgb: 47, 138, 92;
   --color-text-muted-rgb: 95, 138, 112;
 }
 
@@ -105,7 +105,7 @@
   --color-text-muted: #c2ab7d;
   --color-accent: #d1a13f;
   --color-accent-strong: #e8c06a;
-  --color-accent-strong-rgb: 232, 192, 106;
+  --color-accent-rgb: 209, 161, 63;
   --color-text-muted-rgb: 194, 171, 125;
 }
 [data-palette="gold"][data-mode="light"] {
@@ -117,7 +117,7 @@
   --color-text-muted: #93805a;
   --color-accent: #b1842a;
   --color-accent-strong: #8c6820;
-  --color-accent-strong-rgb: 140, 104, 32;
+  --color-accent-rgb: 177, 132, 42;
   --color-text-muted-rgb: 147, 128, 90;
 }
 
@@ -131,7 +131,7 @@
   --color-text-muted: #9aa3ad;
   --color-accent: #7c8894;
   --color-accent-strong: #a7b2bd;
-  --color-accent-strong-rgb: 167, 178, 189;
+  --color-accent-rgb: 124, 136, 148;
   --color-text-muted-rgb: 154, 163, 173;
 }
 [data-palette="silver"][data-mode="light"] {
@@ -143,7 +143,7 @@
   --color-text-muted: #737a84;
   --color-accent: #5b6773;
   --color-accent-strong: #434d57;
-  --color-accent-strong-rgb: 67, 77, 87;
+  --color-accent-rgb: 91, 103, 115;
   --color-text-muted-rgb: 115, 122, 132;
 }
 
@@ -157,7 +157,7 @@
   --color-text-muted: #7fb6bc;
   --color-accent: #3fb5c4;
   --color-accent-strong: #6fd4e0;
-  --color-accent-strong-rgb: 111, 212, 224;
+  --color-accent-rgb: 63, 181, 196;
   --color-text-muted-rgb: 127, 182, 188;
 }
 [data-palette="crystal"][data-mode="light"] {
@@ -169,7 +169,7 @@
   --color-text-muted: #567d81;
   --color-accent: #1f97a8;
   --color-accent-strong: #187983;
-  --color-accent-strong-rgb: 24, 121, 131;
+  --color-accent-rgb: 31, 151, 168;
   --color-text-muted-rgb: 86, 125, 129;
 }
 
@@ -701,7 +701,7 @@ button:active, .btn:active { transform: scale(0.97); }
 .btn-danger { background: transparent; border-color: var(--color-danger); color: var(--color-danger); }
 .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(201, 86, 74, 0.35); }
 .btn-outline { background: transparent; border-color: var(--color-accent-strong); color: var(--color-accent-strong); }
-.btn-outline:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(var(--color-accent-strong-rgb), 0.35); }
+.btn-outline:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(var(--color-accent-rgb), 0.35); }
 .btn-secondary { background: transparent; border-color: var(--color-text-muted); color: var(--color-text-muted); }
 .btn-secondary:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(var(--color-text-muted-rgb), 0.35); }
 .btn-success { background: transparent; border-color: var(--color-success); color: var(--color-success); }
