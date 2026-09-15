@@ -5,6 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
 exports.getStats = asyncHandler(async (req, res) => {
   const [
     totalLivres,
+    totalAuteurs,
     totalAdherents,
     empruntsEnCours,
     empruntsEnRetard,
@@ -12,6 +13,7 @@ exports.getStats = asyncHandler(async (req, res) => {
     adherentLePlusActif,
   ] = await Promise.all([
     pool.query('SELECT COUNT(*) FROM livres'),
+    pool.query('SELECT COUNT(*) FROM auteurs'),
     pool.query('SELECT COUNT(*) FROM adherents'),
     pool.query('SELECT COUNT(*) FROM emprunts WHERE date_retour_effective IS NULL'),
     pool.query(
@@ -38,6 +40,7 @@ exports.getStats = asyncHandler(async (req, res) => {
 
   res.json({
     total_livres: parseInt(totalLivres.rows[0].count, 10),
+    total_auteurs: parseInt(totalAuteurs.rows[0].count, 10),
     total_adherents: parseInt(totalAdherents.rows[0].count, 10),
     emprunts_en_cours: parseInt(empruntsEnCours.rows[0].count, 10),
     emprunts_en_retard: parseInt(empruntsEnRetard.rows[0].count, 10),

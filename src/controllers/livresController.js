@@ -2,10 +2,10 @@ const pool = require('../config/db');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 
-// GET /api/livres?q=...&page=1&limit=10
-// Recherche par titre ou nom d'auteur (paramètre q), avec pagination.
+// GET /api/livres?q=...&page=1&limit=10&sort=annee_asc&dispo_first=true
+// Recherche par titre ou nom d'auteur (paramètre q), avec pagination et tri optionnel.
 exports.getAll = asyncHandler(async (req, res) => {
-  const { q } = req.query;
+  const { q, sort, dispo_first } = req.query;
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const offset = (page - 1) * limit;
@@ -20,6 +20,21 @@ exports.getAll = asyncHandler(async (req, res) => {
   const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
   const total = parseInt(countResult.rows[0].count, 10);
 
+  // construit la clause ORDER BY a partir d'une liste blanche de criteres fixes,
+  // jamais depuis une valeur brute envoyee par l'utilisateur, pour rester a l'abri des injections SQL
+  const criteresTri = [];
+  if (dispo_first === 'true') criteresTri.push('l.disponible DESC');
+  if (sort === 'annee_asc') {
+    criteresTri.push('l.annee_publication ASC NULLS LAST');
+  } else if (sort === 'annee_desc') {
+    criteresTri.push('l.annee_publication DESC NULLS LAST');
+  } else if (sort === 'titre_desc') {
+    criteresTri.push('l.titre DESC');
+  } else {
+    criteresTri.push('l.titre ASC');
+  }
+  const orderByClause = criteresTri.join(', ');
+
   const dataParams = q ? [...params, limit, offset] : [limit, offset];
   const limitPlaceholder = q ? '$2' : '$1';
   const offsetPlaceholder = q ? '$3' : '$2';
@@ -28,7 +43,7 @@ exports.getAll = asyncHandler(async (req, res) => {
     `SELECT l.id, l.titre, l.annee_publication, l.disponible,
             a.id AS auteur_id, a.nom AS auteur_nom
      ${baseQuery}
-     ORDER BY l.titre ASC
+     ORDER BY ${orderByClause}
      LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}`,
     dataParams
   );
