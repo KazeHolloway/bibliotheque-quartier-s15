@@ -140,7 +140,10 @@ async function supprimerLivre(id) {
     showMessage(messageContainer, 'Livre supprimé avec succès.', 'success');
     chargerLivres();
   } catch (err) {
-    showMessage(messageContainer, `Suppression impossible : ${err.message}`);
+    const messageAffiche = err.message.includes('référencée ailleurs')
+      ? 'Suppression impossible : ce livre est référencé dans un emprunt.'
+      : `Suppression impossible : ${err.message}`;
+    showMessage(messageContainer, messageAffiche);
   }
 }
 
