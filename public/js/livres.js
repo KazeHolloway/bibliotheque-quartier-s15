@@ -50,7 +50,7 @@ function construireLigne(livre) {
       <td>${livre.annee_publication ?? '—'}</td>
       <td class="text-center">${statutBadge}</td>
       <td class="text-center">
-        <button class="btn-ghost btn-small" data-action="modifier" data-id="${livre.id}">Modifier</button>
+        <button class="btn-outline btn-small" data-action="modifier" data-id="${livre.id}">Modifier</button>
         <button class="btn-danger btn-small" data-action="supprimer" data-id="${livre.id}">Supprimer</button>
       </td>
     </tr>
