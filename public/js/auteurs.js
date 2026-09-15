@@ -31,7 +31,7 @@ function afficherAuteurs(auteurs) {
         <td>${auteur.nom}</td>
         <td>${auteur.nationalite || '<span class="text-muted">Non renseignée</span>'}</td>
         <td class="text-center">
-            <button type="button" class="btn-ghost btn-small" data-modifier="${auteur.id}">Modifier</button>
+            <button type="button" class="btn-outline btn-small" data-modifier="${auteur.id}">Modifier</button>
             <button type="button" class="btn-danger btn-small" data-supprimer="${auteur.id}">Supprimer</button>
         </td>
         </tr>
@@ -108,11 +108,14 @@ tbody.addEventListener('click', async (e) => {
         if (!confirmation) return;
 
         try {
-        await api.delete(`/auteurs/${idSupprimer}`);
-        showMessage(messageContainer, 'Auteur supprimé avec succès.', 'success');
-        chargerAuteurs();
+            await api.delete(`/auteurs/${idSupprimer}`);
+            showMessage(messageContainer, 'Auteur supprimé avec succès.', 'success');
+            chargerAuteurs();
         } catch (err) {
-        showMessage(messageContainer, err.message);
+            const messageAffiche = err.message.includes('référencée ailleurs')
+                ? "Impossible d'effectuer cette action : cet auteur est référencé ailleurs (ex. un livre, un emprunt)."
+                : err.message;
+            showMessage(messageContainer, messageAffiche);
         }
     }
 });
