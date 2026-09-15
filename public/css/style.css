@@ -361,6 +361,57 @@ a { color: var(--color-accent-strong); }
 }
 .overlay.visible { opacity: 1; pointer-events: auto; }
 
+/* Modale d'historique des emprunts, même principe que le panneau de palette */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-medium);
+  z-index: 110;
+}
+.modal-overlay.visible { opacity: 1; pointer-events: auto; }
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: min(560px, 90vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-medium), transform var(--transition-medium);
+  z-index: 111;
+}
+.modal.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
+
+.modal-close {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text);
+  flex-shrink: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.modal-close:hover { background: var(--color-surface-raised); border-color: var(--color-accent); }
+.modal-close svg { width: 18px; height: 18px; flex-shrink: 0; }
+
 /* --- Structure generale : sidebar + contenu, sous la topbar fixe --- */
 .layout {
   display: flex;
@@ -489,10 +540,27 @@ tbody tr { transition: background var(--transition-fast); }
 tbody tr:hover { background: var(--color-surface-raised); }
 
 /* --- Badges de statut --- */
-.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-align: center; }
 .badge-success { background: var(--color-success-bg); color: var(--color-success); }
 .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); }
 .badge-muted { background: var(--color-surface-raised); color: var(--color-text-muted); }
+
+/* Lignes de l'historique des emprunts affiché dans la modale */
+.historique-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.historique-item:last-child { border-bottom: none; }
+.historique-item-titre { font-weight: 600; }
+.historique-item-dates { font-size: 0.82rem; margin-top: 0.2rem; }
+.historique-item .badge { min-width: 92px; flex-shrink: 0; }
+
+/* dire explicitement au navigateur de ne jamais couper la colonne "Contact" du tableau adhérents, peu importe les espaces à l'intérieur */
+#adherents-tbody td:nth-child(2) { white-space: nowrap; }
 
 /* --- Formulaires --- */
 label { display: block; font-size: 0.82rem; color: var(--color-text-muted); margin-bottom: 0.3rem; }
@@ -531,10 +599,14 @@ button:active, .btn:active { transform: scale(0.97); }
 .btn-primary { background: var(--color-accent); color: #0f0d0c; }
 .btn-primary:hover { opacity: 0.9; }
 .btn-ghost { background: transparent; border-color: var(--color-border); color: var(--color-text); }
-.btn-ghost:hover { background: var(--color-surface-raised); transform: translateY(-1px); }
+.btn-ghost:hover { background: var(--color-surface-raised); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15); }
 .btn-danger { background: transparent; border-color: var(--color-danger); color: var(--color-danger); }
-.btn-danger:hover { background: var(--color-danger-bg); transform: translateY(-1px); }
-.btn-small { padding: 0.32rem 0.75rem; font-size: 0.8rem; }
+.btn-danger:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(201, 86, 74, 0.35); }
+.btn-outline { background: transparent; border-color: var(--color-accent-strong); color: var(--color-accent-strong); }
+.btn-outline:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25); }
+.btn-secondary { background: transparent; border-color: var(--color-text-muted); color: var(--color-text-muted); }
+.btn-secondary:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); }
+.btn-small { padding: 0.32rem 0.75rem; font-size: 0.8rem; margin: 0.5rem; }
 
 /* --- Messages --- */
 .message { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.7rem 0.9rem; border-radius: var(--radius); font-size: 0.88rem; margin-bottom: 1rem; }
