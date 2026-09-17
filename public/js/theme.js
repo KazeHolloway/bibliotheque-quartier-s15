@@ -94,6 +94,28 @@ function initHamburger() {
   });
 }
 
+// ferme la sidebar au clic en dehors ou a la touche echap, uniquement en affichage mobile (tiroir plein ecran)
+function initSidebarAutoClose() {
+  const sidebar = document.querySelector('.sidebar');
+  const bouton = document.getElementById('hamburger');
+  if (!sidebar || !bouton) return;
+
+  const estMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+  document.addEventListener('click', (e) => {
+    if (!estMobile()) return;
+    if (!document.body.classList.contains('sidebar-collapsed')) return;
+    if (sidebar.contains(e.target) || bouton.contains(e.target)) return;
+    document.body.classList.remove('sidebar-collapsed');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && estMobile() && document.body.classList.contains('sidebar-collapsed')) {
+      document.body.classList.remove('sidebar-collapsed');
+    }
+  });
+}
+
 // affiche le bouton remonter en haut apres un certain defilement, et le fait fonctionner
 function initScrollTop() {
   const bouton = document.getElementById('scroll-top');
@@ -133,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initModeToggle();
   initPaletteToggle();
   initHamburger();
+  initSidebarAutoClose();
   initScrollTop();
   initBrandLink();
 });
