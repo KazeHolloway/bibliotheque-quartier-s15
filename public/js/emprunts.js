@@ -34,7 +34,7 @@ dateInput.min = dateDuJourLocale();
 async function chargerAdherents() {
     try {
         const adherents = await api.get('/adherents');
-        const options = adherents.map((a) => `<option value="${a.id}">${a.nom}</option>`).join('');
+        const options = adherents.map((a) => `<option value="${a.id}">${echapperHtml(a.nom)}</option>`).join('');
         adherentSelect.innerHTML = `<option value="">Sélectionner un adhérent</option>${options}`;
     } catch (err) {
         showMessage(messageContainer, `Impossible de charger les adhérents : ${err.message}`);
@@ -58,8 +58,8 @@ function construireOptionsLivres(livres) {
     }
 
     livreSelectList.innerHTML = livres.map((livre) => `
-        <li class="livre-select-option ${livre.disponible ? '' : 'is-disabled'}" role="option" data-id="${livre.id}" data-titre="${livre.titre}" aria-disabled="${!livre.disponible}">
-        <span class="livre-select-option-titre">${livre.titre}</span>
+        <li class="livre-select-option ${livre.disponible ? '' : 'is-disabled'}" role="option" data-id="${livre.id}" data-titre="${echapperHtml(livre.titre)}" aria-disabled="${!livre.disponible}">
+        <span class="livre-select-option-titre">${echapperHtml(livre.titre)}</span>
         ${livre.disponible
             ? '<span class="badge badge-success">Disponible</span>'
             : '<span class="badge badge-muted">Emprunté</span>'}
@@ -138,8 +138,8 @@ function afficherEmprunts(emprunts) {
 
     tbody.innerHTML = emprunts.map((emp) => `
         <tr>
-        <td>${emp.livre_titre}</td>
-        <td>${emp.adherent_nom}</td>
+        <td>${echapperHtml(emp.livre_titre)}</td>
+        <td>${echapperHtml(emp.adherent_nom)}</td>
         <td>${formatDate(emp.date_emprunt)}</td>
         <td>${formatDate(emp.date_retour_prevue)}</td>
         <td class="text-center">

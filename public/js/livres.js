@@ -29,7 +29,7 @@ async function chargerAuteurs() {
   try {
     const auteurs = await api.get('/auteurs');
     const optionsAuteurs = auteurs
-      .map((a) => `<option value="${a.id}">${a.nom}</option>`)
+      .map((a) => `<option value="${a.id}">${echapperHtml(a.nom)}</option>`)
       .join('');
     selectAuteur.innerHTML = `<option value="">Sélectionner un auteur</option>${optionsAuteurs}`;
   } catch (err) {
@@ -45,8 +45,8 @@ function construireLigne(livre) {
 
   return `
     <tr>
-      <td>${livre.titre}</td>
-      <td>${livre.auteur_nom}</td>
+      <td>${echapperHtml(livre.titre)}</td>
+      <td>${echapperHtml(livre.auteur_nom)}</td>
       <td>${livre.annee_publication ?? '—'}</td>
       <td class="text-center">${statutBadge}</td>
       <td class="text-center">

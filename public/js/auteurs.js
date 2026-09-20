@@ -28,8 +28,8 @@ function afficherAuteurs(auteurs) {
 
     tbody.innerHTML = auteurs.map((auteur) => `
         <tr>
-        <td>${auteur.nom}</td>
-        <td>${auteur.nationalite || '<span class="text-muted">Non renseignée</span>'}</td>
+        <td>${echapperHtml(auteur.nom)}</td>
+        <td>${auteur.nationalite ? echapperHtml(auteur.nationalite) : '<span class="text-muted">Non renseignée</span>'}</td>
         <td class="text-center">
             <button type="button" class="btn-outline btn-small" data-modifier="${auteur.id}">Modifier</button>
             <button type="button" class="btn-danger btn-small" data-supprimer="${auteur.id}">Supprimer</button>

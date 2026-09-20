@@ -30,6 +30,16 @@ const api = {
   delete: (path) => apiRequest(path, { method: 'DELETE' }),
 };
 
+// neutralise les caractères spéciaux HTML d'une valeur avant de l'injecter via innerHTML
+function echapperHtml(valeur) {
+  return String(valeur ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // affiche un message d'erreur ou de succes, avec une croix de fermeture et une disparition automatique apres 10 secondes
 function showMessage(container, text, type = 'error') {
   container.innerHTML = `

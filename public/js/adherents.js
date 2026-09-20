@@ -46,10 +46,10 @@ function afficherAdherents(adherents) {
 
     tbody.innerHTML = adherents.map((adherent) => `
         <tr>
-        <td>${adherent.nom}</td>
-        <td>${adherent.contact}</td>
+        <td>${echapperHtml(adherent.nom)}</td>
+        <td>${echapperHtml(adherent.contact)}</td>
         <td class="text-center">
-            <button type="button" class="btn-secondary btn-small" data-historique="${adherent.id}" data-nom="${adherent.nom}">Historique</button>
+            <button type="button" class="btn-secondary btn-small" data-historique="${adherent.id}" data-nom="${echapperHtml(adherent.nom)}">Historique</button>
             <button type="button" class="btn-outline btn-small" data-modifier="${adherent.id}">Modifier</button>
             <button type="button" class="btn-danger btn-small" data-supprimer="${adherent.id}">Supprimer</button>
         </td>
@@ -150,10 +150,10 @@ async function ouvrirHistorique(id, nom) {
         modalBody.innerHTML = historique.map((item) => `
         <div class="historique-item">
             <div>
-            <div class="historique-item-titre">${item.livre_titre}</div>
-            <div class="historique-item-dates text-muted">
-                Emprunté le ${formatDate(item.date_emprunt)}, retour prévu le ${formatDate(item.date_retour_prevue)}
-            </div>
+                <div class="historique-item-titre">${echapperHtml(item.livre_titre)}</div>
+                <div class="historique-item-dates text-muted">
+                    Emprunté le ${formatDate(item.date_emprunt)}, retour prévu le ${formatDate(item.date_retour_prevue)}
+                </div>
             </div>
             ${construireBadgeHistorique(item)}
         </div>
