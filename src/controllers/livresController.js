@@ -2,20 +2,39 @@ const pool = require('../config/db');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 
-// GET /api/livres?q=...&page=1&limit=10&sort=annee_asc&dispo_first=true
-// Recherche par titre ou nom d'auteur (paramètre q), avec pagination et tri optionnel.
+// GET /api/livres?q=...&page=1&limit=10&sort=annee_asc&dispo_first=true&disponible=true&auteur_id=3
+// Recherche par titre ou nom d'auteur (paramètre q), avec pagination, tri et filtres optionnels.
 exports.getAll = asyncHandler(async (req, res) => {
-  const { q, sort, dispo_first } = req.query;
+  const { q, sort, dispo_first, disponible, auteur_id } = req.query;
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const offset = (page - 1) * limit;
 
+  // construit la liste des conditions et des parametres au fur et a mesure, jamais de valeur brute dans le SQL
+  const conditions = [];
+  const params = [];
+
+  if (q) {
+    params.push(`%${q}%`);
+    conditions.push(`(l.titre ILIKE $${params.length} OR a.nom ILIKE $${params.length})`);
+  }
+
+  if (disponible === 'true' || disponible === 'false') {
+    params.push(disponible === 'true');
+    conditions.push(`l.disponible = $${params.length}`);
+  }
+
+  if (auteur_id) {
+    params.push(auteur_id);
+    conditions.push(`l.auteur_id = $${params.length}`);
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const baseQuery = `
     FROM livres l
     JOIN auteurs a ON a.id = l.auteur_id
-    ${q ? 'WHERE l.titre ILIKE $1 OR a.nom ILIKE $1' : ''}
+    ${whereClause}
   `;
-  const params = q ? [`%${q}%`] : [];
 
   const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
   const total = parseInt(countResult.rows[0].count, 10);
@@ -35,16 +54,16 @@ exports.getAll = asyncHandler(async (req, res) => {
   }
   const orderByClause = criteresTri.join(', ');
 
-  const dataParams = q ? [...params, limit, offset] : [limit, offset];
-  const limitPlaceholder = q ? '$2' : '$1';
-  const offsetPlaceholder = q ? '$3' : '$2';
+  const dataParams = [...params, limit, offset];
+  const limitPlaceholder = `$${params.length + 1}`;
+  const offsetPlaceholder = `$${params.length + 2}`;
 
   const dataResult = await pool.query(
     `SELECT l.id, l.titre, l.annee_publication, l.disponible,
             a.id AS auteur_id, a.nom AS auteur_nom
-     ${baseQuery}
-     ORDER BY ${orderByClause}
-     LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}`,
+      ${baseQuery}
+      ORDER BY ${orderByClause}
+      LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}`,
     dataParams
   );
 
