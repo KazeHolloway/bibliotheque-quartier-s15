@@ -12,6 +12,7 @@ const livreSelectLabel = document.getElementById('livre-select-label');
 const livreSelectList = document.getElementById('livre-select-list');
 const livreIdInput = document.getElementById('livre_id');
 const filtreStatutSelect = document.getElementById('filtre-statut');
+const exportRetardsBtn = document.getElementById('export-retards-btn');
 
 // garde en mémoire la dernière liste d'emprunts chargée, pour filtrer sans rappeler l'API
 let empruntsEnCours = [];
@@ -233,6 +234,75 @@ tbody.addEventListener('click', async (e) => {
         showMessage(messageContainer, err.message);
     }
 });
+
+// protège une valeur pour le CSV : guillemets doublés, et neutralisation d'une éventuelle formule Excel
+function echapperCsv(valeur) {
+    let texte = String(valeur ?? '');
+
+    // un texte qui commence par = @ + ou - serait exécuté comme une formule par Excel, on le préfixe d'une apostrophe
+    if (/^[=@\t\r]|^[+-](?![\d\s-]+$)/.test(texte)) {
+        texte = `'${texte}`;
+    }
+
+    return `"${texte.replace(/"/g, '""')}"`;
+}
+
+// nombre de jours entre la date de retour prévue (YYYY-MM-DD) et aujourd'hui, sans effet de fuseau horaire
+function joursDeRetard(dateRetourPrevue) {
+    const [anneePrevue, moisPrevu, jourPrevu] = dateRetourPrevue.split('-').map(Number);
+    const [anneeJour, moisJour, jourJour] = dateDuJourLocale().split('-').map(Number);
+    const msParJour = 24 * 60 * 60 * 1000;
+
+    return Math.round(
+        (Date.UTC(anneeJour, moisJour - 1, jourJour) - Date.UTC(anneePrevue, moisPrevu - 1, jourPrevu)) / msParJour
+    );
+}
+
+// construit le fichier CSV de tous les emprunts en retard et déclenche son téléchargement
+async function exporterRetardsCsv() {
+    clearMessage(messageContainer);
+
+    try {
+        const retards = await api.get('/emprunts/en-retard');
+
+        if (retards.length === 0) {
+            showMessage(messageContainer, 'Aucun emprunt en retard à exporter.');
+            return;
+        }
+
+        const entetes = ['Livre', 'Adhérent', 'Contact', 'Emprunté le', 'Retour prévu le', 'Jours de retard'];
+        const lignes = retards.map((emp) => [
+            emp.livre_titre,
+            emp.adherent_nom,
+            emp.adherent_contact,
+            formatDate(emp.date_emprunt),
+            formatDate(emp.date_retour_prevue),
+            joursDeRetard(emp.date_retour_prevue),
+        ]);
+
+        // séparateur point-virgule, celui qu'Excel attend en configuration française
+        const contenu = [entetes, ...lignes]
+            .map((ligne) => ligne.map(echapperCsv).join(';'))
+            .join('\r\n');
+
+        // le caractère invisible \uFEFF en tête permet à Excel d'afficher correctement les accents
+        const blob = new Blob(['\uFEFF' + contenu], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const lien = document.createElement('a');
+        lien.href = url;
+        lien.download = `emprunts-en-retard-${dateDuJourLocale()}.csv`;
+        document.body.appendChild(lien);
+        lien.click();
+        document.body.removeChild(lien);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        showMessage(messageContainer, `${retards.length} emprunt(s) en retard exporté(s).`, 'success');
+    } catch (err) {
+        showMessage(messageContainer, `Impossible d'exporter les retards : ${err.message}`);
+    }
+}
+
+exportRetardsBtn.addEventListener('click', exporterRetardsCsv);
 
 // un changement de filtre réaffiche la liste déjà chargée
 filtreStatutSelect.addEventListener('change', appliquerFiltreStatut);

@@ -127,10 +127,10 @@
             <form id="emprunt-form" novalidate>
             <div class="form-row">
                 <div class="field">
-                <label for="adherent_id">Adhérent</label>
-                <select id="adherent_id" name="adherent_id" required>
-                    <option value="">Sélectionner un adhérent</option>
-                </select>
+                    <label for="adherent_id">Adhérent</label>
+                    <select id="adherent_id" name="adherent_id" required>
+                        <option value="">Sélectionner un adhérent</option>
+                    </select>
                 </div>
 
                 <div class="field">
@@ -158,18 +158,19 @@
 
         <div class="card">
             <div class="card-header-row">
-            <h2>Emprunts en cours</h2>
+                <h2>Emprunts en cours</h2>
             </div>
 
             <div class="card-header-row sort-row">
-            <div class="field field-inline">
-                <label for="filtre-statut">Afficher</label>
-                <select id="filtre-statut">
-                <option value="">Tous les emprunts</option>
-                <option value="en-cours">En cours (dans les délais)</option>
-                <option value="en-retard">En retard</option>
-                </select>
-            </div>
+                <div class="field field-inline">
+                    <label for="filtre-statut">Afficher</label>
+                    <select id="filtre-statut">
+                    <option value="">Tous les emprunts</option>
+                    <option value="en-cours">En cours (dans les délais)</option>
+                    <option value="en-retard">En retard</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-ghost btn-small" id="export-retards-btn">Exporter les retards (CSV)</button>
             </div>
 
             <table>
