@@ -88,6 +88,20 @@ exports.create = asyncHandler(async (req, res) => {
     throw new AppError("L'auteur indiqué n'existe pas.", 400);
   }
 
+  const doublon = await pool.query(
+    `SELECT id FROM livres
+      WHERE LOWER(TRIM(titre)) = LOWER(TRIM($1))
+        AND auteur_id = $2
+        AND annee_publication IS NOT DISTINCT FROM $3`,
+    [titre, auteur_id, annee_publication || null]
+  );
+  if (doublon.rows.length > 0) {
+    throw new AppError(
+      'Ajout impossible : ce livre existe déjà (même titre, même auteur et même année de publication).',
+      409
+    );
+  }
+
   const result = await pool.query(
     `INSERT INTO livres (titre, auteur_id, annee_publication)
      VALUES ($1, $2, $3) RETURNING *`,
@@ -107,6 +121,21 @@ exports.update = asyncHandler(async (req, res) => {
     if (auteur.rows.length === 0) {
       throw new AppError("L'auteur indiqué n'existe pas.", 400);
     }
+  }
+
+  const doublon = await pool.query(
+    `SELECT id FROM livres
+      WHERE LOWER(TRIM(titre)) = LOWER(TRIM($1))
+        AND auteur_id = $2
+        AND annee_publication IS NOT DISTINCT FROM $3
+        AND id <> $4`,
+    [titre, auteur_id, annee_publication || null, id]
+  );
+  if (doublon.rows.length > 0) {
+    throw new AppError(
+      'Modification impossible : un livre identique existe déjà (même titre, même auteur et même année de publication).',
+      409
+    );
   }
 
   const result = await pool.query(
