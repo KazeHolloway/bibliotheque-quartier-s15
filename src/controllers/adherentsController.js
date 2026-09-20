@@ -71,15 +71,17 @@ exports.getHistorique = asyncHandler(async (req, res) => {
     throw new AppError('Adhérent introuvable.', 404);
   }
 
+  // ecart_jours : négatif si rendu en avance, positif si rendu en retard, vide si pas encore rendu
   const result = await pool.query(
     `SELECT e.id, e.date_emprunt, e.date_retour_prevue, e.date_retour_effective,
+            (e.date_retour_effective - e.date_retour_prevue) AS ecart_jours,
             l.id AS livre_id, l.titre AS livre_titre,
             (e.date_retour_effective IS NULL) AS en_cours,
             (e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE) AS en_retard
-     FROM emprunts e
-     JOIN livres l ON l.id = e.livre_id
-     WHERE e.adherent_id = $1
-     ORDER BY e.date_emprunt DESC`,
+      FROM emprunts e
+      JOIN livres l ON l.id = e.livre_id
+      WHERE e.adherent_id = $1
+      ORDER BY e.date_emprunt DESC`,
     [id]
   );
 
