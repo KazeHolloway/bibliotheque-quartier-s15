@@ -115,44 +115,60 @@
         </nav>
 
         <main class="main">
-        <div class="page-header">
-            <h1>Auteurs</h1>
-            <p>Gérez la liste des auteurs de la bibliothèque.</p>
-        </div>
-
-        <div id="message"></div>
-
-        <div class="card">
-            <h2 id="form-title">Ajouter un auteur</h2>
-            <form id="auteur-form" novalidate>
-            <div class="form-row">
-                <div class="field">
-                <label for="nom">Nom</label>
-                <input type="text" id="nom" name="nom" required>
-                </div>
-                <div class="field">
-                <label for="nationalite">Nationalité</label>
-                <input type="text" id="nationalite" name="nationalite">
-                </div>
+            <div class="page-header">
+                <h1>Auteurs</h1>
+                <p>Gérez la liste des auteurs de la bibliothèque.</p>
             </div>
-            <button type="submit" class="btn-primary" id="submit-btn">Ajouter l'auteur</button>
-            <button type="button" class="btn-ghost" id="cancel-edit-btn" hidden>Annuler la modification</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <h2>Liste des auteurs</h2>
-            <table>
-            <thead>
-                <tr>
-                <th>Nom</th>
-                <th>Nationalité</th>
-                <th class="text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody id="auteurs-tbody"></tbody>
-            </table>
-        </div>
+            <div id="message"></div>
+
+            <div class="card">
+                <h2 id="form-title">Ajouter un auteur</h2>
+                <form id="auteur-form" novalidate>
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="nom">Nom</label>
+                            <input type="text" id="nom" name="nom" required>
+                        </div>
+                            <div class="field">
+                            <label for="nationalite">Nationalité</label>
+                            <input type="text" id="nationalite" name="nationalite">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" id="submit-btn">Ajouter l'auteur</button>
+                    <button type="button" class="btn-ghost" id="cancel-edit-btn" hidden>Annuler la modification</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header-row">
+                    <h2>Liste des auteurs</h2>
+                    <input type="search" id="search-input" class="search-input" placeholder="Rechercher par nom...">
+                </div>
+
+                <div class="card-header-row sort-row">
+                    <div class="field field-inline">
+                        <label for="filtre-nationalite">Nationalité</label>
+                        <select id="filtre-nationalite">
+                            <option value="">Toutes les nationalités</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-ghost btn-small" id="reset-filtres-btn">Réinitialiser les filtres</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                        <th>Nom</th>
+                        <th>Nationalité</th>
+                        <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auteurs-tbody"></tbody>
+                </table>
+
+                <div id="pagination" class="pagination"></div>
+            </div>
         </main>
     </div>
 
