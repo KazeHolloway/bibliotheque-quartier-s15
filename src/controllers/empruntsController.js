@@ -4,9 +4,9 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const SELECT_EMPRUNT_DETAIL = `
   SELECT e.id, e.date_emprunt, e.date_retour_prevue, e.date_retour_effective,
-         a.id AS adherent_id, a.nom AS adherent_nom,
-         l.id AS livre_id, l.titre AS livre_titre,
-         (e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE) AS en_retard
+          a.id AS adherent_id, a.nom AS adherent_nom, a.contact AS adherent_contact,
+          l.id AS livre_id, l.titre AS livre_titre,
+          (e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE) AS en_retard
   FROM emprunts e
   JOIN adherents a ON a.id = e.adherent_id
   JOIN livres l ON l.id = e.livre_id
