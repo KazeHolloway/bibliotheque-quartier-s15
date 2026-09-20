@@ -127,7 +127,56 @@ function construireBadgeHistorique(item) {
     if (item.en_cours) {
         return '<span class="badge badge-success">En cours</span>';
     }
-    return `<span class="badge badge-muted">Rendu le ${formatDate(item.date_retour_effective)}</span>`;
+    if (item.ecart_jours > 0) {
+        return '<span class="badge badge-warning">Rendu en retard</span>';
+    }
+    return '<span class="badge badge-info">Rendu à temps</span>';
+}
+
+// transforme un nombre de jours en durée lisible (mois de 30 jours, semaines, jours), ex. "1 mois, 2 semaines et 3 jours"
+function formaterDuree(nombreJours) {
+    const mois = Math.floor(nombreJours / 30);
+    const semaines = Math.floor((nombreJours % 30) / 7);
+    const jours = (nombreJours % 30) % 7;
+
+    const morceaux = [];
+    if (mois > 0) morceaux.push(`${mois} mois`);
+    if (semaines > 0) morceaux.push(`${semaines} ${semaines > 1 ? 'semaines' : 'semaine'}`);
+    if (jours > 0) morceaux.push(`${jours} ${jours > 1 ? 'jours' : 'jour'}`);
+
+    if (morceaux.length <= 1) return morceaux.join('');
+    return `${morceaux.slice(0, -1).join(', ')} et ${morceaux[morceaux.length - 1]}`;
+}
+
+// décrit la date de rendu et l'écart avec la date prévue, uniquement pour un emprunt déjà rendu
+function construireDetailRendu(item) {
+    if (item.en_cours) return '';
+
+    let ecart = 'à la date prévue';
+    if (item.ecart_jours < 0) ecart = `${formaterDuree(-item.ecart_jours)} en avance`;
+    if (item.ecart_jours > 0) ecart = `${formaterDuree(item.ecart_jours)} en retard`;
+
+    return `<div class="historique-item-dates text-muted">Rendu le ${formatDate(item.date_retour_effective)}, ${ecart}</div>`;
+}
+
+// compte les livres déjà rendus dans les temps et hors délai, pour le bilan affiché en bas de la modale
+function construireBilanRetours(historique) {
+    const rendus = historique.filter((item) => !item.en_cours);
+    const rendusATemps = rendus.filter((item) => item.ecart_jours <= 0).length;
+    const rendusEnRetard = rendus.length - rendusATemps;
+
+    return `
+        <div class="historique-bilan">
+            <div class="historique-bilan-ligne">
+                <span>Livres rendus dans les temps :</span>
+                <span class="badge badge-info">${rendusATemps}</span>
+            </div>
+            <div class="historique-bilan-ligne">
+                <span>Livres rendus hors délai :</span>
+                <span class="badge badge-warning">${rendusEnRetard}</span>
+            </div>
+        </div>
+    `;
 }
 
 // ouvre la modale et charge l'historique des emprunts de l'adherent concerne
@@ -147,17 +196,20 @@ async function ouvrirHistorique(id, nom) {
         return;
         }
 
-        modalBody.innerHTML = historique.map((item) => `
+        const listeHtml = historique.map((item) => `
         <div class="historique-item">
             <div>
-                <div class="historique-item-titre">${echapperHtml(item.livre_titre)}</div>
-                <div class="historique-item-dates text-muted">
-                    Emprunté le ${formatDate(item.date_emprunt)}, retour prévu le ${formatDate(item.date_retour_prevue)}
-                </div>
+            <div class="historique-item-titre">${echapperHtml(item.livre_titre)}</div>
+            <div class="historique-item-dates text-muted">
+                Emprunté le ${formatDate(item.date_emprunt)}, retour prévu le ${formatDate(item.date_retour_prevue)}
+            </div>
+            ${construireDetailRendu(item)}
             </div>
             ${construireBadgeHistorique(item)}
         </div>
         `).join('');
+
+        modalBody.innerHTML = listeHtml + construireBilanRetours(historique);
     } catch (err) {
         modalBody.innerHTML = `<p class="empty-state">Impossible de charger l'historique : ${err.message}</p>`;
     }
