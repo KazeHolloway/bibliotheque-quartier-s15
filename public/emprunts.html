@@ -157,7 +157,21 @@
         </div>
 
         <div class="card">
+            <div class="card-header-row">
             <h2>Emprunts en cours</h2>
+            </div>
+
+            <div class="card-header-row sort-row">
+            <div class="field field-inline">
+                <label for="filtre-statut">Afficher</label>
+                <select id="filtre-statut">
+                <option value="">Tous les emprunts</option>
+                <option value="en-cours">En cours (dans les délais)</option>
+                <option value="en-retard">En retard</option>
+                </select>
+            </div>
+            </div>
+
             <table>
             <thead>
                 <tr>

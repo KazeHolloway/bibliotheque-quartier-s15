@@ -11,6 +11,10 @@ const livreSelectTrigger = document.getElementById('livre-select-trigger');
 const livreSelectLabel = document.getElementById('livre-select-label');
 const livreSelectList = document.getElementById('livre-select-list');
 const livreIdInput = document.getElementById('livre_id');
+const filtreStatutSelect = document.getElementById('filtre-statut');
+
+// garde en mémoire la dernière liste d'emprunts chargée, pour filtrer sans rappeler l'API
+let empruntsEnCours = [];
 
 // renvoie la date du jour au format YYYY-MM-DD en heure locale, jamais via toISOString qui bascule en UTC
 function dateDuJourLocale() {
@@ -120,19 +124,35 @@ function reinitialiserFormulaire() {
     dateInput.min = dateDuJourLocale();
 }
 
-// charge les emprunts en cours, qui incluent deja le champ en_retard calcule par le backend
+// charge les emprunts en cours, qui incluent déjà le champ en_retard calculé par le backend
 async function chargerEmprunts() {
     try {
-        const emprunts = await api.get('/emprunts/en-cours');
-        afficherEmprunts(emprunts);
+        empruntsEnCours = await api.get('/emprunts/en-cours');
+        appliquerFiltreStatut();
     } catch (err) {
         showMessage(messageContainer, `Impossible de charger les emprunts : ${err.message}`);
     }
 }
 
+// affiche la liste chargée en respectant le filtre de statut choisi
+function appliquerFiltreStatut() {
+    const statut = filtreStatutSelect.value;
+    let emprunts = empruntsEnCours;
+
+    if (statut === 'en-retard') emprunts = empruntsEnCours.filter((emp) => emp.en_retard);
+    if (statut === 'en-cours') emprunts = empruntsEnCours.filter((emp) => !emp.en_retard);
+
+    afficherEmprunts(emprunts);
+}
+
 function afficherEmprunts(emprunts) {
     if (emprunts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucun emprunt en cours pour le moment.</td></tr>';
+        const messagesVides = {
+            '': 'Aucun emprunt en cours pour le moment.',
+            'en-cours': 'Aucun emprunt dans les délais pour le moment.',
+            'en-retard': 'Aucun emprunt en retard pour le moment.',
+        };
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${messagesVides[filtreStatutSelect.value]}</td></tr>`;
         return;
     }
 
@@ -213,6 +233,9 @@ tbody.addEventListener('click', async (e) => {
         showMessage(messageContainer, err.message);
     }
 });
+
+// un changement de filtre réaffiche la liste déjà chargée
+filtreStatutSelect.addEventListener('change', appliquerFiltreStatut);
 
 chargerAdherents();
 chargerLivres();
