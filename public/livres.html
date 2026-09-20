@@ -163,11 +163,25 @@
                 <option value="annee_desc">Année décroissante</option>
                 </select>
             </div>
+            <div class="field field-inline">
+                <label for="filtre-disponibilite">Disponibilité</label>
+                <select id="filtre-disponibilite">
+                <option value="">Tous</option>
+                <option value="true">Disponibles</option>
+                <option value="false">Empruntés</option>
+                </select>
+            </div>
+            <div class="field field-inline">
+                <label for="filtre-auteur">Auteur</label>
+                <select id="filtre-auteur">
+                <option value="">Tous les auteurs</option>
+                </select>
+            </div>
             <label class="checkbox-field" for="sort-dispo">
                 <input type="checkbox" id="sort-dispo">
                 Afficher les disponibles en premier
             </label>
-            <button type="button" class="btn-ghost btn-small" id="reset-sort-btn">Réinitialiser le tri</button>
+            <button type="button" class="btn-ghost btn-small" id="reset-sort-btn">Réinitialiser les filtres</button>
             </div>
 
             <table>

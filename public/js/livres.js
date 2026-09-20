@@ -13,6 +13,8 @@ const cancelEditBtn = document.getElementById('cancel-edit-btn');
 const searchInput = document.getElementById('search-input');
 const sortAnneeSelect = document.getElementById('sort-annee');
 const sortDispoCheckbox = document.getElementById('sort-dispo');
+const filtreDispoSelect = document.getElementById('filtre-disponibilite');
+const filtreAuteurSelect = document.getElementById('filtre-auteur');
 const resetSortBtn = document.getElementById('reset-sort-btn');
 const anneeHint = document.getElementById('annee-hint');
 
@@ -32,6 +34,7 @@ async function chargerAuteurs() {
       .map((a) => `<option value="${a.id}">${echapperHtml(a.nom)}</option>`)
       .join('');
     selectAuteur.innerHTML = `<option value="">Sélectionner un auteur</option>${optionsAuteurs}`;
+    filtreAuteurSelect.innerHTML = `<option value="">Tous les auteurs</option>${optionsAuteurs}`;
   } catch (err) {
     showMessage(messageContainer, `Impossible de charger les auteurs : ${err.message}`);
   }
@@ -88,6 +91,8 @@ async function chargerLivres() {
     if (rechercheActuelle) params.set('q', rechercheActuelle);
     if (sortAnneeSelect.value) params.set('sort', sortAnneeSelect.value);
     if (sortDispoCheckbox.checked) params.set('dispo_first', 'true');
+    if (filtreDispoSelect.value) params.set('disponible', filtreDispoSelect.value);
+    if (filtreAuteurSelect.value) params.set('auteur_id', filtreAuteurSelect.value);
 
     const resultat = await api.get(`/livres?${params.toString()}`);
 
@@ -234,9 +239,23 @@ sortDispoCheckbox.addEventListener('change', () => {
   chargerLivres();
 });
 
+filtreDispoSelect.addEventListener('change', () => {
+  pageActuelle = 1;
+  chargerLivres();
+});
+
+filtreAuteurSelect.addEventListener('change', () => {
+  pageActuelle = 1;
+  chargerLivres();
+});
+
 resetSortBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  rechercheActuelle = '';
   sortAnneeSelect.value = '';
   sortDispoCheckbox.checked = false;
+  filtreDispoSelect.value = '';
+  filtreAuteurSelect.value = '';
   pageActuelle = 1;
   chargerLivres();
 });
