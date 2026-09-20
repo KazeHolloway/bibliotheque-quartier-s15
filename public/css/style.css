@@ -173,12 +173,16 @@
   --color-text-muted-rgb: 86, 125, 129;
 }
 
-/* couleurs communes a toutes les palettes, independantes du mode */
+/* couleurs communes à toutes les palettes, independantes du mode */
 :root {
   --color-danger: #c9564a;
   --color-danger-bg: rgba(201, 86, 74, 0.16);
   --color-success: #4c9d6f;
   --color-success-bg: rgba(76, 157, 111, 0.16);
+  --color-info: #4a86d4;
+  --color-info-bg: rgba(74, 134, 212, 0.16);
+  --color-warning: #c98a1e;
+  --color-warning-bg: rgba(201, 138, 30, 0.16);
 }
 
 body {
@@ -568,6 +572,8 @@ tbody tr:hover { background: var(--color-surface-raised); }
 .badge-success { background: var(--color-success-bg); color: var(--color-success); }
 .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); }
 .badge-muted { background: var(--color-surface-raised); color: var(--color-text-muted); }
+.badge-info { background: var(--color-info-bg); color: var(--color-info); }
+.badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
 
 /* Lignes de l'historique des emprunts affiché dans la modale */
 .historique-item {
@@ -582,6 +588,10 @@ tbody tr:hover { background: var(--color-surface-raised); }
 .historique-item-titre { font-weight: 600; }
 .historique-item-dates { font-size: 0.82rem; margin-top: 0.2rem; }
 .historique-item .badge { min-width: 92px; flex-shrink: 0; }
+
+/* Bilan des retours affiché en bas de la modale d'historique */
+.historique-bilan { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 1rem; font-size: 0.9rem; }
+.historique-bilan-ligne { display: flex; align-items: center; gap: 0.6rem; }
 
 /* dire explicitement au navigateur de ne jamais couper la colonne "Contact" du tableau adhérents, peu importe les espaces à l'intérieur */
 #adherents-tbody td:nth-child(2) { white-space: nowrap; }
