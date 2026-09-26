@@ -2,10 +2,49 @@ const pool = require('../config/db');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 
-// GET /api/adherents
+// GET /api/adherents (tableau complet) ou GET /api/adherents?q=...&sort=nom_desc&page=1&limit=8 (liste paginée, recherchée et triée)
 exports.getAll = asyncHandler(async (req, res) => {
-  const result = await pool.query('SELECT * FROM adherents ORDER BY nom ASC');
-  res.json(result.rows);
+  const { q, sort, page: pageParam, limit: limitParam } = req.query;
+
+  // ni recherche, ni tri, ni pagination demandés : on garde l'ancien format (tableau complet),
+  // pour ne pas casser le sélecteur d'adhérents de la page Emprunts
+  if (!q && !sort && !pageParam && !limitParam) {
+    const result = await pool.query('SELECT * FROM adherents ORDER BY nom ASC');
+    return res.json(result.rows);
+  }
+
+  const page = Math.max(parseInt(pageParam, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(limitParam, 10) || 10, 1), 100);
+  const offset = (page - 1) * limit;
+
+  const params = [];
+  let whereClause = '';
+
+  if (q) {
+    params.push(`%${q}%`);
+    whereClause = 'WHERE nom ILIKE $1 OR contact ILIKE $1';
+  }
+
+  // le sens du tri vient d'une liste blanche, jamais d'une valeur brute envoyée par l'utilisateur
+  const orderByClause = sort === 'nom_desc' ? 'nom DESC, id ASC' : 'nom ASC, id ASC';
+
+  const countResult = await pool.query(`SELECT COUNT(*) FROM adherents ${whereClause}`, params);
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  const dataResult = await pool.query(
+    `SELECT * FROM adherents ${whereClause} ORDER BY ${orderByClause} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset]
+  );
+
+  res.json({
+    data: dataResult.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  });
 });
 
 // GET /api/adherents/:id
