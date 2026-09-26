@@ -96,6 +96,12 @@ async function chargerLivres() {
 
     const resultat = await api.get(`/livres?${params.toString()}`);
 
+    // après une suppression, la page demandée peut ne plus exister : on revient à la dernière page disponible
+    if (resultat.data.length === 0 && pageActuelle > 1) {
+      pageActuelle = resultat.pagination.totalPages;
+      return chargerLivres();
+    }
+
     if (resultat.data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5"><p class="empty-state">Aucun livre trouvé.</p></td></tr>';
     } else {

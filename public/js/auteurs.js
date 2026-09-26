@@ -83,6 +83,12 @@ async function chargerAuteurs() {
 
         const resultat = await api.get(`/auteurs?${params.toString()}`);
 
+        // après une suppression, la page demandée peut ne plus exister : on revient à la dernière page disponible
+        if (resultat.data.length === 0 && pageActuelle > 1) {
+            pageActuelle = resultat.pagination.totalPages;
+            return chargerAuteurs();
+        }
+
         if (resultat.data.length === 0) {
             const message = construireMessageVide(filtreNationaliteSelect.value, rechercheActuelle);
             tbody.innerHTML = `<tr><td colspan="3" class="empty-state">${message}</td></tr>`;
