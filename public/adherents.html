@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Folio-Lib : adherents</title>
+    <title>Folio-Lib : adhérents</title>
     <script src="/js/theme-init.js"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -37,7 +37,7 @@
             </svg>
         </button>
 
-        <button id="palette-toggle" class="palette-toggle" aria-label="Ouvrir la selection de palette" aria-expanded="false">
+        <button id="palette-toggle" class="palette-toggle" aria-label="Ouvrir la sélection de palette" aria-expanded="false">
             <svg viewBox="0 0 24 24">
             <path d="M12 12 L12 2 A10 10 0 0 1 20.66 7 Z" fill="#c94f5c"></path>
             <path d="M12 12 L20.66 7 A10 10 0 0 1 20.66 17 Z" fill="#3f7fd1"></path>
@@ -132,7 +132,7 @@
                 </div>
                 <div class="field">
                 <label for="contact">Contact</label>
-                <input type="text" id="contact" name="contact" required placeholder="Email ou telephone">
+                <input type="text" id="contact" name="contact" required placeholder="Email ou téléphone">
                 </div>
             </div>
             <button type="submit" class="btn-primary" id="submit-btn">Ajouter l'adhérent</button>
@@ -141,7 +141,22 @@
         </div>
 
         <div class="card">
+            <div class="card-header-row">
             <h2>Liste des adhérents</h2>
+            <input type="search" id="search-input" class="search-input" placeholder="Rechercher par nom ou contact...">
+            </div>
+
+            <div class="card-header-row sort-row">
+            <div class="field field-inline">
+                <label for="sort-nom">Trier la liste</label>
+                <select id="sort-nom">
+                <option value="">Nom (A-Z)</option>
+                <option value="nom_desc">Nom (Z-A)</option>
+                </select>
+            </div>
+            <button type="button" class="btn-ghost btn-small" id="reset-filtres-btn">Réinitialiser les filtres</button>
+            </div>
+
             <table>
             <thead>
                 <tr>
@@ -152,6 +167,8 @@
             </thead>
             <tbody id="adherents-tbody"></tbody>
             </table>
+
+            <div id="pagination" class="pagination"></div>
         </div>
         </main>
     </div>
@@ -160,7 +177,7 @@
     <div id="historique-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
         <div class="modal-header">
         <h2 id="modal-title">Historique des emprunts</h2>
-        <button type="button" id="modal-close" class="modal-close" aria-label="Fermer la fenetre">
+        <button type="button" id="modal-close" class="modal-close" aria-label="Fermer la fenêtre">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="6" y1="6" x2="18" y2="18"></line>
             <line x1="6" y1="18" x2="18" y2="6"></line>
