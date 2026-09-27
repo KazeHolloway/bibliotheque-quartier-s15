@@ -11,6 +11,16 @@ const livreSelectTrigger = document.getElementById('livre-select-trigger');
 const livreSelectLabel = document.getElementById('livre-select-label');
 const livreSelectList = document.getElementById('livre-select-list');
 const livreIdInput = document.getElementById('livre_id');
+const filtreStatutSelect = document.getElementById('filtre-statut');
+const exportRetardsBtn = document.getElementById('export-retards-btn');
+const searchInput = document.getElementById('search-input');
+const resetFiltresBtn = document.getElementById('reset-filtres-btn');
+const paginationContainer = document.getElementById('pagination');
+
+let pageActuelle = 1;
+const limiteParPage = 8;
+let rechercheActuelle = '';
+let delaiRecherche = null;
 
 // renvoie la date du jour au format YYYY-MM-DD en heure locale, jamais via toISOString qui bascule en UTC
 function dateDuJourLocale() {
@@ -34,7 +44,7 @@ dateInput.min = dateDuJourLocale();
 async function chargerAdherents() {
     try {
         const adherents = await api.get('/adherents');
-        const options = adherents.map((a) => `<option value="${a.id}">${a.nom}</option>`).join('');
+        const options = adherents.map((a) => `<option value="${a.id}">${echapperHtml(a.nom)}</option>`).join('');
         adherentSelect.innerHTML = `<option value="">Sélectionner un adhérent</option>${options}`;
     } catch (err) {
         showMessage(messageContainer, `Impossible de charger les adhérents : ${err.message}`);
@@ -58,8 +68,8 @@ function construireOptionsLivres(livres) {
     }
 
     livreSelectList.innerHTML = livres.map((livre) => `
-        <li class="livre-select-option ${livre.disponible ? '' : 'is-disabled'}" role="option" data-id="${livre.id}" data-titre="${livre.titre}" aria-disabled="${!livre.disponible}">
-        <span class="livre-select-option-titre">${livre.titre}</span>
+        <li class="livre-select-option ${livre.disponible ? '' : 'is-disabled'}" role="option" data-id="${livre.id}" data-titre="${echapperHtml(livre.titre)}" aria-disabled="${!livre.disponible}">
+        <span class="livre-select-option-titre">${echapperHtml(livre.titre)}</span>
         ${livre.disponible
             ? '<span class="badge badge-success">Disponible</span>'
             : '<span class="badge badge-muted">Emprunté</span>'}
@@ -120,11 +130,47 @@ function reinitialiserFormulaire() {
     dateInput.min = dateDuJourLocale();
 }
 
-// charge les emprunts en cours, qui incluent deja le champ en_retard calcule par le backend
+// construit les boutons de pagination selon les informations renvoyées par l'API
+function construirePagination(pagination) {
+    if (pagination.totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    paginationContainer.innerHTML = `
+        <button class="btn-ghost btn-small" id="page-precedente" ${pagination.page <= 1 ? 'disabled' : ''}>Précédent</button>
+        <span class="page-info">Page ${pagination.page} sur ${pagination.totalPages}</span>
+        <button class="btn-ghost btn-small" id="page-suivante" ${pagination.page >= pagination.totalPages ? 'disabled' : ''}>Suivant</button>
+    `;
+
+    document.getElementById('page-precedente')?.addEventListener('click', () => {
+        pageActuelle -= 1;
+        chargerEmprunts();
+    });
+
+    document.getElementById('page-suivante')?.addEventListener('click', () => {
+        pageActuelle += 1;
+        chargerEmprunts();
+    });
+}
+
+// charge la page d'emprunts non rendus demandée, en tenant compte de la recherche, du filtre de statut et de la page en cours
 async function chargerEmprunts() {
     try {
-        const emprunts = await api.get('/emprunts/en-cours');
-        afficherEmprunts(emprunts);
+        const params = new URLSearchParams({ page: pageActuelle, limit: limiteParPage });
+        if (rechercheActuelle) params.set('q', rechercheActuelle);
+        if (filtreStatutSelect.value) params.set('statut', filtreStatutSelect.value);
+
+        const resultat = await api.get(`/emprunts/en-cours?${params.toString()}`);
+
+        // après un retour ou une suppression, la page demandée peut ne plus exister : on revient à la dernière page disponible
+        if (resultat.data.length === 0 && pageActuelle > 1) {
+            pageActuelle = resultat.pagination.totalPages;
+            return chargerEmprunts();
+        }
+
+        afficherEmprunts(resultat.data);
+        construirePagination(resultat.pagination);
     } catch (err) {
         showMessage(messageContainer, `Impossible de charger les emprunts : ${err.message}`);
     }
@@ -132,14 +178,23 @@ async function chargerEmprunts() {
 
 function afficherEmprunts(emprunts) {
     if (emprunts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucun emprunt en cours pour le moment.</td></tr>';
+        if (rechercheActuelle) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Aucun emprunt trouvé pour « ${echapperHtml(rechercheActuelle)} ».</td></tr>`;
+            return;
+        }
+        const messagesVides = {
+            '': 'Aucun emprunt en cours pour le moment.',
+            'en-cours': 'Aucun emprunt dans les délais pour le moment.',
+            'en-retard': 'Aucun emprunt en retard pour le moment.',
+        };
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${messagesVides[filtreStatutSelect.value]}</td></tr>`;
         return;
     }
 
     tbody.innerHTML = emprunts.map((emp) => `
         <tr>
-        <td>${emp.livre_titre}</td>
-        <td>${emp.adherent_nom}</td>
+        <td>${echapperHtml(emp.livre_titre)}</td>
+        <td>${echapperHtml(emp.adherent_nom)}</td>
         <td>${formatDate(emp.date_emprunt)}</td>
         <td>${formatDate(emp.date_retour_prevue)}</td>
         <td class="text-center">
@@ -212,6 +267,99 @@ tbody.addEventListener('click', async (e) => {
     } catch (err) {
         showMessage(messageContainer, err.message);
     }
+});
+
+// protège une valeur pour le CSV : guillemets doublés, et neutralisation d'une éventuelle formule Excel
+function echapperCsv(valeur) {
+    let texte = String(valeur ?? '');
+
+    // un texte qui commence par = @ + ou - serait exécuté comme une formule par Excel, on le préfixe d'une apostrophe
+    if (/^[=@\t\r]|^[+-](?![\d\s-]+$)/.test(texte)) {
+        texte = `'${texte}`;
+    }
+
+    return `"${texte.replace(/"/g, '""')}"`;
+}
+
+// nombre de jours entre la date de retour prévue (YYYY-MM-DD) et aujourd'hui, sans effet de fuseau horaire
+function joursDeRetard(dateRetourPrevue) {
+    const [anneePrevue, moisPrevu, jourPrevu] = dateRetourPrevue.split('-').map(Number);
+    const [anneeJour, moisJour, jourJour] = dateDuJourLocale().split('-').map(Number);
+    const msParJour = 24 * 60 * 60 * 1000;
+
+    return Math.round(
+        (Date.UTC(anneeJour, moisJour - 1, jourJour) - Date.UTC(anneePrevue, moisPrevu - 1, jourPrevu)) / msParJour
+    );
+}
+
+// construit le fichier CSV de tous les emprunts en retard et déclenche son téléchargement
+async function exporterRetardsCsv() {
+    clearMessage(messageContainer);
+
+    try {
+        const retards = await api.get('/emprunts/en-retard');
+
+        if (retards.length === 0) {
+            showMessage(messageContainer, 'Aucun emprunt en retard à exporter.');
+            return;
+        }
+
+        const entetes = ['Livre', 'Adhérent', 'Contact', 'Emprunté le', 'Retour prévu le', 'Jours de retard'];
+        const lignes = retards.map((emp) => [
+            emp.livre_titre,
+            emp.adherent_nom,
+            emp.adherent_contact,
+            formatDate(emp.date_emprunt),
+            formatDate(emp.date_retour_prevue),
+            joursDeRetard(emp.date_retour_prevue),
+        ]);
+
+        // séparateur point-virgule, celui qu'Excel attend en configuration française
+        const contenu = [entetes, ...lignes]
+            .map((ligne) => ligne.map(echapperCsv).join(';'))
+            .join('\r\n');
+
+        // le caractère invisible \uFEFF en tête permet à Excel d'afficher correctement les accents
+        const blob = new Blob(['\uFEFF' + contenu], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const lien = document.createElement('a');
+        lien.href = url;
+        lien.download = `emprunts-en-retard-${dateDuJourLocale()}.csv`;
+        document.body.appendChild(lien);
+        lien.click();
+        document.body.removeChild(lien);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        showMessage(messageContainer, `${retards.length} emprunt(s) en retard exporté(s).`, 'success');
+    } catch (err) {
+        showMessage(messageContainer, `Impossible d'exporter les retards : ${err.message}`);
+    }
+}
+
+exportRetardsBtn.addEventListener('click', exporterRetardsCsv);
+
+// relance la recherche après une courte pause, pour éviter une requête à chaque frappe
+searchInput.addEventListener('input', () => {
+    clearTimeout(delaiRecherche);
+    delaiRecherche = setTimeout(() => {
+        rechercheActuelle = searchInput.value.trim();
+        pageActuelle = 1;
+        chargerEmprunts();
+    }, 350);
+});
+
+filtreStatutSelect.addEventListener('change', () => {
+    pageActuelle = 1;
+    chargerEmprunts();
+});
+
+resetFiltresBtn.addEventListener('click', () => {
+    clearTimeout(delaiRecherche);
+    searchInput.value = '';
+    rechercheActuelle = '';
+    filtreStatutSelect.value = '';
+    pageActuelle = 1;
+    chargerEmprunts();
 });
 
 chargerAdherents();

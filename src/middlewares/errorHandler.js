@@ -28,6 +28,21 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: 'Identifiant ou valeur invalide.' });
   }
 
+  if (err.code === '23514') {
+    // check_violation
+    if (err.constraint === 'emprunts_retour_apres_emprunt') {
+      return res.status(400).json({
+        error: "La date de retour prévue ne peut pas être antérieure à la date de l'emprunt.",
+      });
+    }
+    if (err.constraint === 'livres_annee_plausible') {
+      return res.status(400).json({
+        error: "L'année de publication doit être comprise entre 1450 et l'année en cours.",
+      });
+    }
+    return res.status(400).json({ error: 'Cette opération viole une règle de cohérence des données.' });
+  }
+
   // Erreur non prévue -> on log côté serveur, on ne fuite pas les détails
   console.error('Erreur non gérée :', err);
   return res.status(500).json({ error: 'Erreur interne du serveur.' });
