@@ -27,7 +27,7 @@ CREATE TABLE livres (
     id                  SERIAL PRIMARY KEY,
     titre               VARCHAR(255) NOT NULL,
     auteur_id           INTEGER NOT NULL REFERENCES auteurs(id) ON DELETE RESTRICT,
-    annee_publication   INTEGER,
+    annee_publication   INTEGER CONSTRAINT livres_annee_plausible CHECK (annee_publication IS NULL OR annee_publication BETWEEN 1450 AND EXTRACT(YEAR FROM CURRENT_DATE)::integer),
     disponible          BOOLEAN NOT NULL DEFAULT TRUE
 );
 
@@ -45,7 +45,8 @@ CREATE TABLE emprunts (
     livre_id                INTEGER NOT NULL REFERENCES livres(id) ON DELETE RESTRICT,
     date_emprunt            DATE NOT NULL DEFAULT CURRENT_DATE,
     date_retour_prevue      DATE NOT NULL,
-    date_retour_effective   DATE
+    date_retour_effective   DATE,
+    CONSTRAINT emprunts_retour_apres_emprunt CHECK (date_retour_prevue >= date_emprunt)
 );
 
 CREATE INDEX idx_emprunts_adherent_id ON emprunts (adherent_id);
@@ -53,7 +54,12 @@ CREATE INDEX idx_emprunts_livre_id ON emprunts (livre_id);
 CREATE INDEX idx_emprunts_en_cours ON emprunts (date_retour_effective);
 
 -- Notes de modélisation :
--- 1. Un emprunt "en retard" = date_retour_effective IS NULL ET date_retour_prevue < CURRENT_DATE
+-- 1a. Un emprunt "en retard" = date_retour_effective IS NULL ET date_retour_prevue < CURRENT_DATE
+
+-- 1b. emprunts_retour_apres_emprunt empêche une date de retour prévue antérieure à la date d'emprunt.
+--     Comme date_emprunt vaut la date du jour à la création et ne change plus jamais, ceci interdit
+--     de facto une date de retour déjà passée à la création, sans jamais gener le retour tardif
+--     d'un emprunt existant (date_emprunt et date_retour_prevue restent fixes apres coup).
 
 -- 2. ON DELETE RESTRICT partout sur les FK : on refuse de supprimer un auteur/adhérent/livre
 --    référencé ailleurs, pour préserver l'historique. Le backend renvoie un message

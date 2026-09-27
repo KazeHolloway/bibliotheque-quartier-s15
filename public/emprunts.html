@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Folio-Lib : emprunts</title>
+    <meta name="author" content="MASSAMBA BOUESSO Christophe Darly">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <script src="/js/theme-init.js"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -115,65 +117,85 @@
         </nav>
 
         <main class="main">
-        <div class="page-header">
-            <h1>Emprunts</h1>
-            <p>Enregistrez un emprunt et suivez les retours.</p>
-        </div>
-
-        <div id="message"></div>
-
-        <div class="card">
-            <h2>Enregistrer un emprunt</h2>
-            <form id="emprunt-form" novalidate>
-            <div class="form-row">
-                <div class="field">
-                <label for="adherent_id">Adhérent</label>
-                <select id="adherent_id" name="adherent_id" required>
-                    <option value="">Sélectionner un adhérent</option>
-                </select>
-                </div>
-
-                <div class="field">
-                <label for="livre-select-trigger">Livre</label>
-                <div class="livre-select" id="livre-select">
-                    <button type="button" class="livre-select-trigger" id="livre-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span id="livre-select-label">Sélectionner un livre</span>
-                    <svg class="livre-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                    </button>
-                    <ul class="livre-select-list" id="livre-select-list" role="listbox"></ul>
-                </div>
-                <input type="hidden" id="livre_id" name="livre_id">
-                </div>
-
-                <div class="field">
-                <label for="date_retour_prevue">Date de retour prévue</label>
-                <input type="date" id="date_retour_prevue" name="date_retour_prevue" required>
-                </div>
+            <div class="page-header">
+                <h1>Emprunts</h1>
+                <p>Enregistrez un emprunt et suivez les retours.</p>
             </div>
-            <button type="submit" class="btn-primary" id="submit-btn">Enregistrer l'emprunt</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <h2>Emprunts en cours</h2>
-            <table>
-            <thead>
-                <tr>
-                <th>Livre</th>
-                <th>Adhérent</th>
-                <th>Emprunté le</th>
-                <th>Retour prévu</th>
-                <th class="text-center">Statut</th>
-                <th class="text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody id="emprunts-tbody"></tbody>
-            </table>
-        </div>
+            <div id="message"></div>
+
+            <div class="card">
+                <h2>Enregistrer un emprunt</h2>
+                <form id="emprunt-form" novalidate>
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="adherent_id">Adhérent</label>
+                            <select id="adherent_id" name="adherent_id" required>
+                                <option value="">Sélectionner un adhérent</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="livre-select-trigger">Livre</label>
+                            <div class="livre-select" id="livre-select">
+                                <button type="button" class="livre-select-trigger" id="livre-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span id="livre-select-label">Sélectionner un livre</span>
+                                    <svg class="livre-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                                <ul class="livre-select-list" id="livre-select-list" role="listbox"></ul>
+                            </div>
+                            <input type="hidden" id="livre_id" name="livre_id">
+                        </div>
+
+                        <div class="field">
+                            <label for="date_retour_prevue">Date de retour prévue</label>
+                            <input type="date" id="date_retour_prevue" name="date_retour_prevue" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" id="submit-btn">Enregistrer l'emprunt</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header-row">
+                    <h2>Emprunts en cours</h2>
+                    <input type="search" id="search-input" class="search-input" placeholder="Rechercher par livre ou adhérent...">
+                </div>
+
+                <div class="card-header-row sort-row">
+                    <div class="field field-inline">
+                        <label for="filtre-statut">Afficher</label>
+                        <select id="filtre-statut">
+                            <option value="">Tous les emprunts</option>
+                            <option value="en-cours">En cours (dans les délais)</option>
+                            <option value="en-retard">En retard</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-ghost btn-small" id="export-retards-btn">Exporter les retards (CSV)</button>
+                    <button type="button" class="btn-ghost btn-small" id="reset-filtres-btn">Réinitialiser les filtres</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                        <th>Livre</th>
+                        <th>Adhérent</th>
+                        <th>Emprunté le</th>
+                        <th>Retour prévu</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emprunts-tbody"></tbody>
+                </table>
+
+                <div id="pagination" class="pagination"></div>
+            </div>
         </main>
     </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <button id="scroll-top" class="scroll-top" aria-label="Remonter en haut">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -173,12 +173,16 @@
   --color-text-muted-rgb: 86, 125, 129;
 }
 
-/* couleurs communes a toutes les palettes, independantes du mode */
+/* couleurs communes à toutes les palettes, independantes du mode */
 :root {
   --color-danger: #c9564a;
   --color-danger-bg: rgba(201, 86, 74, 0.16);
   --color-success: #4c9d6f;
   --color-success-bg: rgba(76, 157, 111, 0.16);
+  --color-info: #4a86d4;
+  --color-info-bg: rgba(74, 134, 212, 0.16);
+  --color-warning: #c98a1e;
+  --color-warning-bg: rgba(201, 138, 30, 0.16);
 }
 
 body {
@@ -568,6 +572,8 @@ tbody tr:hover { background: var(--color-surface-raised); }
 .badge-success { background: var(--color-success-bg); color: var(--color-success); }
 .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); }
 .badge-muted { background: var(--color-surface-raised); color: var(--color-text-muted); }
+.badge-info { background: var(--color-info-bg); color: var(--color-info); }
+.badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
 
 /* Lignes de l'historique des emprunts affiché dans la modale */
 .historique-item {
@@ -582,6 +588,11 @@ tbody tr:hover { background: var(--color-surface-raised); }
 .historique-item-titre { font-weight: 600; }
 .historique-item-dates { font-size: 0.82rem; margin-top: 0.2rem; }
 .historique-item .badge { min-width: 92px; flex-shrink: 0; }
+
+/* Bilan des retours affiché en bas de la modale d'historique */
+.historique-footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-top: 1rem; }
+.historique-bilan { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; }
+.historique-bilan-ligne { display: flex; align-items: center; gap: 0.6rem; }
 
 /* dire explicitement au navigateur de ne jamais couper la colonne "Contact" du tableau adhérents, peu importe les espaces à l'intérieur */
 #adherents-tbody td:nth-child(2) { white-space: nowrap; }
@@ -773,7 +784,71 @@ button:active, .btn:active { transform: scale(0.97); }
 .scroll-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .scroll-top svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-/* --- Media queries : la sidebar passe en tiroir plein hauteur sur petit ecran --- */
+/* Notification discrète affichée en bas d'écran quand le message principal n'est pas visible */
+.toast {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.6rem;
+  max-width: 320px;
+  z-index: 120;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity var(--transition-medium), transform var(--transition-medium);
+}
+
+.toast.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.toast-bulle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  color: var(--color-text);
+}
+
+.toast-success { border-left-color: var(--color-success); }
+.toast-success .toast-icone { color: var(--color-success); }
+.toast-error { border-left-color: var(--color-danger); }
+.toast-error .toast-icone { color: var(--color-danger); }
+
+.toast-icone { width: 18px; height: 18px; flex-shrink: 0; margin-top: 0.15rem; }
+
+.toast-texte {
+  flex: 1;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  /* line-clamp standard volontairement absente, elle fait échouer le validateur W3C CSS à ce jour */
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-fermer {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Media queries */
+@media (max-width: 480px) {
+  .toast { left: 1rem; right: 1rem; max-width: none; bottom: 5.5rem; }
+}
+
+/* La sidebar passe en tiroir plein hauteur sur petit ecran --- */
 @media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); }
   body.sidebar-collapsed .sidebar { transform: translateX(0); }
