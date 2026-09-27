@@ -439,6 +439,7 @@ a { color: var(--color-accent-strong); }
 }
 .modal-close:hover { background: var(--color-surface-raised); border-color: var(--color-accent); }
 .modal-close svg { width: 18px; height: 18px; flex-shrink: 0; }
+.modal-actions { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
 
 /* --- Structure generale : sidebar + contenu, sous la topbar fixe --- */
 .layout {
@@ -824,6 +825,7 @@ button:active, .btn:active { transform: scale(0.97); }
   font-size: 0.88rem;
   line-height: 1.4;
   display: -webkit-box;
+  /* line-clamp standard volontairement absente, elle fait échouer le validateur W3C CSS à ce jour */
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
