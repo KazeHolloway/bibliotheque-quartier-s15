@@ -11,6 +11,7 @@ const rules = [
 router.get('/', controller.getAll);
 router.get('/:id', controller.getById);
 router.get('/:id/emprunts', controller.getHistorique);
+router.delete('/:id/emprunts', controller.viderHistorique);
 router.post('/', validate(rules), controller.create);
 router.put('/:id', validate(rules), controller.update);
 router.delete('/:id', controller.remove);

@@ -126,3 +126,21 @@ exports.getHistorique = asyncHandler(async (req, res) => {
 
   res.json(result.rows);
 });
+
+// DELETE /api/adherents/:id/emprunts
+// Supprime uniquement les emprunts déjà rendus de cet adhérent, jamais un emprunt en cours.
+exports.viderHistorique = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const adherent = await pool.query('SELECT id FROM adherents WHERE id = $1', [id]);
+  if (adherent.rows.length === 0) {
+    throw new AppError('Adhérent introuvable.', 404);
+  }
+
+  const result = await pool.query(
+    'DELETE FROM emprunts WHERE adherent_id = $1 AND date_retour_effective IS NOT NULL RETURNING id',
+    [id]
+  );
+
+  res.json({ supprimes: result.rows.length });
+});
