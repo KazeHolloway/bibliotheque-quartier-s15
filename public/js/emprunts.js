@@ -13,9 +13,14 @@ const livreSelectList = document.getElementById('livre-select-list');
 const livreIdInput = document.getElementById('livre_id');
 const filtreStatutSelect = document.getElementById('filtre-statut');
 const exportRetardsBtn = document.getElementById('export-retards-btn');
+const searchInput = document.getElementById('search-input');
+const resetFiltresBtn = document.getElementById('reset-filtres-btn');
+const paginationContainer = document.getElementById('pagination');
 
-// garde en mémoire la dernière liste d'emprunts chargée, pour filtrer sans rappeler l'API
-let empruntsEnCours = [];
+let pageActuelle = 1;
+const limiteParPage = 8;
+let rechercheActuelle = '';
+let delaiRecherche = null;
 
 // renvoie la date du jour au format YYYY-MM-DD en heure locale, jamais via toISOString qui bascule en UTC
 function dateDuJourLocale() {
@@ -125,29 +130,58 @@ function reinitialiserFormulaire() {
     dateInput.min = dateDuJourLocale();
 }
 
-// charge les emprunts en cours, qui incluent déjà le champ en_retard calculé par le backend
+// construit les boutons de pagination selon les informations renvoyées par l'API
+function construirePagination(pagination) {
+    if (pagination.totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    paginationContainer.innerHTML = `
+        <button class="btn-ghost btn-small" id="page-precedente" ${pagination.page <= 1 ? 'disabled' : ''}>Précédent</button>
+        <span class="page-info">Page ${pagination.page} sur ${pagination.totalPages}</span>
+        <button class="btn-ghost btn-small" id="page-suivante" ${pagination.page >= pagination.totalPages ? 'disabled' : ''}>Suivant</button>
+    `;
+
+    document.getElementById('page-precedente')?.addEventListener('click', () => {
+        pageActuelle -= 1;
+        chargerEmprunts();
+    });
+
+    document.getElementById('page-suivante')?.addEventListener('click', () => {
+        pageActuelle += 1;
+        chargerEmprunts();
+    });
+}
+
+// charge la page d'emprunts non rendus demandée, en tenant compte de la recherche, du filtre de statut et de la page en cours
 async function chargerEmprunts() {
     try {
-        empruntsEnCours = await api.get('/emprunts/en-cours');
-        appliquerFiltreStatut();
+        const params = new URLSearchParams({ page: pageActuelle, limit: limiteParPage });
+        if (rechercheActuelle) params.set('q', rechercheActuelle);
+        if (filtreStatutSelect.value) params.set('statut', filtreStatutSelect.value);
+
+        const resultat = await api.get(`/emprunts/en-cours?${params.toString()}`);
+
+        // après un retour ou une suppression, la page demandée peut ne plus exister : on revient à la dernière page disponible
+        if (resultat.data.length === 0 && pageActuelle > 1) {
+            pageActuelle = resultat.pagination.totalPages;
+            return chargerEmprunts();
+        }
+
+        afficherEmprunts(resultat.data);
+        construirePagination(resultat.pagination);
     } catch (err) {
         showMessage(messageContainer, `Impossible de charger les emprunts : ${err.message}`);
     }
 }
 
-// affiche la liste chargée en respectant le filtre de statut choisi
-function appliquerFiltreStatut() {
-    const statut = filtreStatutSelect.value;
-    let emprunts = empruntsEnCours;
-
-    if (statut === 'en-retard') emprunts = empruntsEnCours.filter((emp) => emp.en_retard);
-    if (statut === 'en-cours') emprunts = empruntsEnCours.filter((emp) => !emp.en_retard);
-
-    afficherEmprunts(emprunts);
-}
-
 function afficherEmprunts(emprunts) {
     if (emprunts.length === 0) {
+        if (rechercheActuelle) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Aucun emprunt trouvé pour « ${echapperHtml(rechercheActuelle)} ».</td></tr>`;
+            return;
+        }
         const messagesVides = {
             '': 'Aucun emprunt en cours pour le moment.',
             'en-cours': 'Aucun emprunt dans les délais pour le moment.',
@@ -304,8 +338,29 @@ async function exporterRetardsCsv() {
 
 exportRetardsBtn.addEventListener('click', exporterRetardsCsv);
 
-// un changement de filtre réaffiche la liste déjà chargée
-filtreStatutSelect.addEventListener('change', appliquerFiltreStatut);
+// relance la recherche après une courte pause, pour éviter une requête à chaque frappe
+searchInput.addEventListener('input', () => {
+    clearTimeout(delaiRecherche);
+    delaiRecherche = setTimeout(() => {
+        rechercheActuelle = searchInput.value.trim();
+        pageActuelle = 1;
+        chargerEmprunts();
+    }, 350);
+});
+
+filtreStatutSelect.addEventListener('change', () => {
+    pageActuelle = 1;
+    chargerEmprunts();
+});
+
+resetFiltresBtn.addEventListener('click', () => {
+    clearTimeout(delaiRecherche);
+    searchInput.value = '';
+    rechercheActuelle = '';
+    filtreStatutSelect.value = '';
+    pageActuelle = 1;
+    chargerEmprunts();
+});
 
 chargerAdherents();
 chargerLivres();
