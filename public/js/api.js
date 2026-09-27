@@ -53,10 +53,80 @@ function showMessage(container, text, type = 'error') {
 
   clearTimeout(container.minuteurMessage);
   container.minuteurMessage = setTimeout(() => clearMessage(container), 10000);
+
+  // le message ne s'affiche pas forcément dans la partie visible de l'ecran (ex. bas d'une longue liste) :
+  // un toast complementaire prend le relais dans ce cas, sans jamais faire doublon avec le message principal
+  requestAnimationFrame(() => {
+    const messageElement = container.querySelector('.message');
+    if (messageElement && !estEntierementVisible(messageElement)) {
+      afficherToast(text, type, container);
+    }
+  });
 }
 
 // vide le conteneur de message et annule la disparition automatique en attente
 function clearMessage(container) {
   clearTimeout(container.minuteurMessage);
   container.innerHTML = '';
+}
+
+// determine si un element est entierement visible dans la fenetre, sans aucune partie coupee, meme d'un seul pixel
+function estEntierementVisible(element) {
+  const rect = element.getBoundingClientRect();
+  const hauteurFenetre = window.innerHeight || document.documentElement.clientHeight;
+  const largeurFenetre = window.innerWidth || document.documentElement.clientWidth;
+  return rect.top >= 0 && rect.left >= 0 && rect.bottom <= hauteurFenetre && rect.right <= largeurFenetre;
+}
+
+// affiche une notification en bas d'ecran ; cliquer dessus fait remonter vers le message complet
+function afficherToast(texte, type, containerMessagePrincipal) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+
+  toast.innerHTML = `
+    <div class="toast-bulle toast-${type}" tabindex="0" role="button" aria-label="Voir le message complet en haut de la page">
+      <svg class="toast-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 15l-6-6-6 6"></path>
+      </svg>
+      <span class="toast-texte">${texte}</span>
+      <button type="button" class="toast-fermer" aria-label="Fermer la notification">&times;</button>
+    </div>
+  `;
+  toast.classList.add('visible');
+
+  const bulle = toast.querySelector('.toast-bulle');
+
+  const allerVersLeMessage = () => {
+    fermerToast();
+    containerMessagePrincipal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  bulle.addEventListener('click', (e) => {
+    if (e.target.closest('.toast-fermer')) return;
+    allerVersLeMessage();
+  });
+
+  bulle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      allerVersLeMessage();
+    }
+  });
+
+  toast.querySelector('.toast-fermer').addEventListener('click', (e) => {
+    e.stopPropagation();
+    fermerToast();
+  });
+
+  clearTimeout(toast.minuteurToast);
+  toast.minuteurToast = setTimeout(fermerToast, 10000);
+}
+
+// masque la notification en bas d'écran
+function fermerToast() {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  clearTimeout(toast.minuteurToast);
+  toast.classList.remove('visible');
+  toast.innerHTML = '';
 }
