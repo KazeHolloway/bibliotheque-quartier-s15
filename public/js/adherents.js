@@ -19,7 +19,6 @@ const modalOverlay = document.getElementById('modal-overlay');
 const modal = document.getElementById('historique-modal');
 const modalBody = document.getElementById('modal-body');
 const modalCloseBtn = document.getElementById('modal-close');
-const modalClearBtn = document.getElementById('modal-clear-history');
 
 let idEnEdition = null;
 let idHistoriqueActuel = null;
@@ -215,24 +214,54 @@ function construireDetailRendu(item) {
     return `<div class="historique-item-dates text-muted">Rendu le ${formatDate(item.date_retour_effective)}, ${ecart}</div>`;
 }
 
-// compte les livres déjà rendus dans les temps et hors délai, pour le bilan affiché en bas de la modale
+// compte les livres déjà rendus dans les temps et hors délai, avec le bouton d'effacement sur la même ligne
 function construireBilanRetours(historique) {
     const rendus = historique.filter((item) => !item.en_cours);
     const rendusATemps = rendus.filter((item) => item.ecart_jours <= 0).length;
     const rendusEnRetard = rendus.length - rendusATemps;
 
     return `
-        <div class="historique-bilan">
-            <div class="historique-bilan-ligne">
-                <span>Livres rendus dans les temps :</span>
-                <span class="badge badge-info">${rendusATemps}</span>
+        <div class="historique-footer">
+            <div class="historique-bilan">
+                <div class="historique-bilan-ligne">
+                    <span>Livres rendus dans les temps :</span>
+                    <span class="badge badge-info">${rendusATemps}</span>
+                </div>
+                <div class="historique-bilan-ligne">
+                    <span>Livres rendus hors délai :</span>
+                    <span class="badge badge-warning">${rendusEnRetard}</span>
+                </div>
             </div>
-            <div class="historique-bilan-ligne">
-                <span>Livres rendus hors délai :</span>
-                <span class="badge badge-warning">${rendusEnRetard}</span>
-            </div>
+            <button type="button" id="modal-clear-history" class="btn-danger btn-small">Effacer l'historique</button>
         </div>
     `;
+}
+
+// rattache l'écouteur du bouton effacer l'historique, recréé à chaque ouverture de la modale
+function rattacherBoutonEffacerHistorique() {
+    const bouton = document.getElementById('modal-clear-history');
+    if (!bouton) return;
+
+    bouton.addEventListener('click', async () => {
+        const confirmation = confirm(
+            `Effacer l'historique de ${nomHistoriqueActuel} ? Seuls les emprunts déjà rendus seront supprimés, les emprunts en cours ne seront pas touchés. Cette action est irréversible.`
+        );
+        if (!confirmation) return;
+
+        try {
+            const resultat = await api.delete(`/adherents/${idHistoriqueActuel}/emprunts`);
+            showMessage(
+                messageContainer,
+                resultat.supprimes > 0
+                    ? `${resultat.supprimes} emprunt(s) effacé(s) de l'historique.`
+                    : "Aucun emprunt rendu à effacer dans l'historique.",
+                'success'
+            );
+            ouvrirHistorique(idHistoriqueActuel, nomHistoriqueActuel);
+        } catch (err) {
+            showMessage(messageContainer, `Impossible d'effacer l'historique : ${err.message}`);
+        }
+    });
 }
 
 // ouvre la modale et charge l'historique des emprunts de l'adhérent concerné
@@ -268,6 +297,7 @@ async function ouvrirHistorique(id, nom) {
         `).join('');
 
         modalBody.innerHTML = listeHtml + construireBilanRetours(historique);
+        rattacherBoutonEffacerHistorique();
     } catch (err) {
         modalBody.innerHTML = `<p class="empty-state">Impossible de charger l'historique : ${err.message}</p>`;
     }
@@ -282,28 +312,6 @@ function fermerModale() {
 
 modalCloseBtn.addEventListener('click', fermerModale);
 modalOverlay.addEventListener('click', fermerModale);
-
-// supprime uniquement les emprunts déjà rendus de l'adhérent affiché, jamais les emprunts en cours
-modalClearBtn.addEventListener('click', async () => {
-    const confirmation = confirm(
-        `Effacer l'historique de ${nomHistoriqueActuel} ? Seuls les emprunts déjà rendus seront supprimés, les emprunts en cours ne seront pas touchés. Cette action est irréversible.`
-    );
-    if (!confirmation) return;
-
-    try {
-        const resultat = await api.delete(`/adherents/${idHistoriqueActuel}/emprunts`);
-        showMessage(
-            messageContainer,
-            resultat.supprimes > 0
-                ? `${resultat.supprimes} emprunt(s) effacé(s) de l'historique.`
-                : "Aucun emprunt rendu à effacer dans l'historique.",
-            'success'
-        );
-        ouvrirHistorique(idHistoriqueActuel, nomHistoriqueActuel);
-    } catch (err) {
-        showMessage(messageContainer, `Impossible d'effacer l'historique : ${err.message}`);
-    }
-});
 
 // ferme la modale avec la touche échap, seulement si elle est actuellement ouverte
 document.addEventListener('keydown', (e) => {
