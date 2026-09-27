@@ -19,8 +19,11 @@ const modalOverlay = document.getElementById('modal-overlay');
 const modal = document.getElementById('historique-modal');
 const modalBody = document.getElementById('modal-body');
 const modalCloseBtn = document.getElementById('modal-close');
+const modalClearBtn = document.getElementById('modal-clear-history');
 
 let idEnEdition = null;
+let idHistoriqueActuel = null;
+let nomHistoriqueActuel = '';
 let pageActuelle = 1;
 const limiteParPage = 8;
 let rechercheActuelle = '';
@@ -234,6 +237,8 @@ function construireBilanRetours(historique) {
 
 // ouvre la modale et charge l'historique des emprunts de l'adhérent concerné
 async function ouvrirHistorique(id, nom) {
+    idHistoriqueActuel = id;
+    nomHistoriqueActuel = nom;
     document.getElementById('modal-title').textContent = `Historique des emprunts : ${nom}`;
     modalBody.innerHTML = '<p class="text-muted">Chargement de l\'historique...</p>';
 
@@ -277,6 +282,28 @@ function fermerModale() {
 
 modalCloseBtn.addEventListener('click', fermerModale);
 modalOverlay.addEventListener('click', fermerModale);
+
+// supprime uniquement les emprunts déjà rendus de l'adhérent affiché, jamais les emprunts en cours
+modalClearBtn.addEventListener('click', async () => {
+    const confirmation = confirm(
+        `Effacer l'historique de ${nomHistoriqueActuel} ? Seuls les emprunts déjà rendus seront supprimés, les emprunts en cours ne seront pas touchés. Cette action est irréversible.`
+    );
+    if (!confirmation) return;
+
+    try {
+        const resultat = await api.delete(`/adherents/${idHistoriqueActuel}/emprunts`);
+        showMessage(
+            messageContainer,
+            resultat.supprimes > 0
+                ? `${resultat.supprimes} emprunt(s) effacé(s) de l'historique.`
+                : "Aucun emprunt rendu à effacer dans l'historique.",
+            'success'
+        );
+        ouvrirHistorique(idHistoriqueActuel, nomHistoriqueActuel);
+    } catch (err) {
+        showMessage(messageContainer, `Impossible d'effacer l'historique : ${err.message}`);
+    }
+});
 
 // ferme la modale avec la touche échap, seulement si elle est actuellement ouverte
 document.addEventListener('keydown', (e) => {
