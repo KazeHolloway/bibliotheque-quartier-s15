@@ -16,6 +16,8 @@ Application de gestion d'une bibliothèque de quartier : auteurs, adhérents, ca
     - [Adhérents](#adhérents)
     - [Emprunts](#emprunts)
     - [Ensemble du site](#ensemble-du-site)
+  - [Pistes bonus](#pistes-bonus)
+  - [Corrections apportées](#corrections-apportées)
   - [Expérience utilisateur et design](#expérience-utilisateur-et-design)
   - [Public visé](#public-visé)
   - [Stack technique](#stack-technique)
@@ -67,6 +69,28 @@ Une bibliothèque de quartier informatise la gestion de ses livres, de ses adhé
 - Navigation claire entre Tableau de bord, Livres, Auteurs, Adhérents et Emprunts
 - Formulaires avec validation et messages d'erreur clairs, sans dépendre des bulles natives du navigateur
 - Communication avec l'API entièrement via `fetch()`
+
+## Pistes bonus
+
+En plus du cahier des charges initial, les pistes bonus suivantes ont été développées :
+
+- **Filtrage des livres** par disponibilité (disponible / emprunté) et par auteur, cumulable avec la recherche et le tri existants
+- **Recherche, tri et pagination** ajoutés aux pages Auteurs (recherche par nom, filtre par nationalité), Adhérents (recherche par nom ou contact, tri A-Z/Z-A) et Emprunts (recherche par titre de livre ou nom d'adhérent), avec un bouton de réinitialisation unique sur chaque page
+- **Filtre de statut** (Tous / En cours / En retard) sur la liste des emprunts
+- **Export CSV** de la liste des emprunts en retard, avec le contact de l'adhérent, prêt pour un suivi ou une relance hors de l'application
+- **Historique enrichi d'un adhérent** : chaque emprunt rendu indique désormais s'il a été rendu à temps ou en retard (avec la durée d'avance ou de retard), un bilan chiffré des retours à temps et hors délai, et un bouton pour effacer l'historique déjà rendu (jamais les emprunts en cours)
+- **Notification toast** complémentaire en bas d'écran, affichée uniquement lorsque le message principal n'est pas entièrement visible à l'écran (utile en bas d'une longue liste), avec un clic pour remonter vers le message complet
+- **Sécurité** : échappement systématique des valeurs affichées (protection contre l'injection HTML/XSS) et refus des doublons de livre (même titre, même auteur et même année de publication)
+- **Identité visuelle** : favicon dédié et balise meta auteur sur chaque page
+
+## Corrections apportées
+
+Suite à la correction du projet par l'équipe pédagogique d'Akieni Academy, deux règles de cohérence ont été ajoutées directement au niveau de la base de données (et non plus seulement côté frontend) :
+
+- **`emprunts_retour_apres_emprunt`** : la date de retour prévue d'un emprunt ne peut jamais être antérieure à sa date d'emprunt. Comme la date d'emprunt est fixée une fois pour toutes à la création, cette contrainte empêche aussi bien une incohérence de saisie qu'une date de retour déjà passée au moment de la création.
+- **`livres_annee_plausible`** : l'année de publication d'un livre doit être comprise entre 1450 (l'imprimerie) et l'année en cours.
+
+Les deux contraintes sont désormais définies dans [`schema.sql`](./schema.sql) pour toute nouvelle installation, et l'API renvoie un message d'erreur clair (plutôt que l'erreur PostgreSQL brute) si l'une d'elles est violée, y compris lors d'un appel direct à l'API.
 
 ## Expérience utilisateur et design
 
@@ -183,21 +207,23 @@ L'application est déployée sur [Render](https://render.com) : un service web N
 
 ## Endpoints de l'API
 
-| Méthode        | Route                         | Description                                                        |
-| -------------- | ------------------------------| ------------------------------------------------------------------ |
-| GET/POST       | `/api/auteurs`                | Liste / création d'auteurs                                         |
-| PUT/DELETE     | `/api/auteurs/:id`            | Modification / suppression                                         |
-| GET/POST       | `/api/adherents`              | Liste / création d'adhérents                                       |
-| GET            | `/api/adherents/:id/emprunts` | Historique des emprunts d'un adhérent                              |
-| GET/POST       | `/api/livres`                 | Liste (recherche `?q=`, pagination `?page=&limit=`, tri `?sort=`) / création |
-| GET/PUT/DELETE | `/api/livres/:id`             | Détail / modification / suppression                                |
-| POST           | `/api/emprunts`               | Créer un emprunt (refuse si livre déjà emprunté)                   |
-| PUT            | `/api/emprunts/:id/retour`    | Enregistrer le retour d'un livre                                   |
-| GET            | `/api/emprunts`               | Liste complète des emprunts                                        |
-| GET            | `/api/emprunts/en-cours`      | Emprunts en cours                                                  |
-| GET            | `/api/emprunts/en-retard`     | Emprunts en retard                                                 |
-| GET            | `/api/stats`                  | Tableau de bord (totaux, livre le + emprunté, adhérent le + actif) |
-| GET            | `/api/health`                 | Contrôle de santé de l'API                                         |
+| Méthode        | Route                          | Description                                                        |
+| -------------- | ------------------------------ | ------------------------------------------------------------------ |
+| GET/POST       | `/api/auteurs`                 | Liste complète / création d'auteurs (liste paginée, filtrée et triée si `?q=`, `?nationalite=`, `?page=` ou `?limit=` sont fournis) |
+| GET            | `/api/auteurs/nationalites`    | Liste des nationalités distinctes présentes en base                |
+| GET/PUT/DELETE | `/api/auteurs/:id`             | Détail / modification / suppression                                |
+| GET/POST       | `/api/adherents`               | Liste complète / création d'adhérents (liste paginée, filtrée et triée si `?q=`, `?sort=`, `?page=` ou `?limit=` sont fournis) |
+| GET            | `/api/adherents/:id/emprunts`  | Historique des emprunts d'un adhérent                              |
+| DELETE         | `/api/adherents/:id/emprunts`  | Efface les emprunts déjà rendus de l'historique (jamais les emprunts en cours) |
+| GET/POST       | `/api/livres`                  | Liste (recherche `?q=`, filtres `?disponible=`/`?auteur_id=`, pagination `?page=&limit=`, tri `?sort=`) / création |
+| GET/PUT/DELETE | `/api/livres/:id`              | Détail / modification / suppression                                |
+| POST           | `/api/emprunts`                | Créer un emprunt (refuse si livre déjà emprunté)                   |
+| PUT            | `/api/emprunts/:id/retour`     | Enregistrer le retour d'un livre                                   |
+| GET            | `/api/emprunts`                | Liste complète des emprunts                                        |
+| GET            | `/api/emprunts/en-cours`       | Emprunts non rendus, paginés (recherche `?q=`, filtre `?statut=en-cours` ou `?statut=en-retard`) |
+| GET            | `/api/emprunts/en-retard`      | Emprunts en retard, liste complète (utilisée par l'export CSV)     |
+| GET            | `/api/stats`                   | Tableau de bord (totaux, livre le + emprunté, adhérent le + actif) |
+| GET            | `/api/health`                  | Contrôle de santé de l'API                                         |
 
 ## Auteur du projet
 
