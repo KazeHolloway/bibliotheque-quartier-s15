@@ -4,9 +4,9 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const SELECT_EMPRUNT_DETAIL = `
   SELECT e.id, e.date_emprunt, e.date_retour_prevue, e.date_retour_effective,
-          a.id AS adherent_id, a.nom AS adherent_nom, a.contact AS adherent_contact,
-          l.id AS livre_id, l.titre AS livre_titre,
-          (e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE) AS en_retard
+        a.id AS adherent_id, a.nom AS adherent_nom, a.contact AS adherent_contact,
+        l.id AS livre_id, l.titre AS livre_titre,
+        (e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE) AS en_retard
   FROM emprunts e
   JOIN adherents a ON a.id = e.adherent_id
   JOIN livres l ON l.id = e.livre_id
@@ -18,20 +18,60 @@ exports.getAll = asyncHandler(async (req, res) => {
   res.json(result.rows);
 });
 
-// GET /api/emprunts/en-cours
+// GET /api/emprunts/en-cours?q=...&statut=en-retard&page=1&limit=8
+// Liste paginee et filtree des emprunts non rendus, avec recherche par titre de livre ou nom d'adherent.
 exports.getEnCours = asyncHandler(async (req, res) => {
-  const result = await pool.query(
-    `${SELECT_EMPRUNT_DETAIL} WHERE e.date_retour_effective IS NULL ORDER BY e.date_retour_prevue ASC`
+  const { q, statut } = req.query;
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+  const offset = (page - 1) * limit;
+
+  const conditions = ['e.date_retour_effective IS NULL'];
+  const params = [];
+
+  if (q) {
+    params.push(`%${q}%`);
+    conditions.push(`(l.titre ILIKE $${params.length} OR a.nom ILIKE $${params.length})`);
+  }
+
+  if (statut === 'en-retard') {
+    conditions.push('e.date_retour_prevue < CURRENT_DATE');
+  } else if (statut === 'en-cours') {
+    conditions.push('e.date_retour_prevue >= CURRENT_DATE');
+  }
+
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
+  const baseQuery = `FROM emprunts e JOIN adherents a ON a.id = e.adherent_id JOIN livres l ON l.id = e.livre_id ${whereClause}`;
+
+  const countResult = await pool.query(`SELECT COUNT(*) ${baseQuery}`, params);
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  const dataParams = [...params, limit, offset];
+  const limitPlaceholder = `$${params.length + 1}`;
+  const offsetPlaceholder = `$${params.length + 2}`;
+
+  const dataResult = await pool.query(
+    `${SELECT_EMPRUNT_DETAIL} ${whereClause} ORDER BY e.date_retour_prevue ASC LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}`,
+    dataParams
   );
-  res.json(result.rows);
+
+  res.json({
+    data: dataResult.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  });
 });
 
 // GET /api/emprunts/en-retard
 exports.getEnRetard = asyncHandler(async (req, res) => {
   const result = await pool.query(
     `${SELECT_EMPRUNT_DETAIL}
-     WHERE e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE
-     ORDER BY e.date_retour_prevue ASC`
+    WHERE e.date_retour_effective IS NULL AND e.date_retour_prevue < CURRENT_DATE
+    ORDER BY e.date_retour_prevue ASC`
   );
   res.json(result.rows);
 });
